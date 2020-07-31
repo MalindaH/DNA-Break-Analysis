@@ -1,0 +1,204 @@
+bowtie-build --wrapper basic-0 -a -r hg19.fa hg19.bowtie
+Settings:
+  Output files: "hg19.bowtie.*.ebwt"
+  Line rate: 6 (line is 64 bytes)
+  Lines per side: 1 (side is 64 bytes)
+  Offset rate: 5 (one in 32)
+  FTable chars: 10
+  Strings: unpacked
+  Max bucket size: default
+  Max bucket size, sqrt multiplier: default
+  Max bucket size, len divisor: 4
+  Difference-cover sample period: 1024
+  Endianness: little
+  Actual local endianness: little
+  Sanity checking: disabled
+  Assertions: disabled
+  Random seed: 0
+  Sizeofs: void*:8, int:4, long:8, size_t:8
+Input files DNA, FASTA:
+  hg19.fa
+Reading reference sizes
+  Time reading reference sizes: 00:00:41
+Calculating joined length
+Writing header
+Reserving space for joined string
+Joining reference sequences
+  Time to join reference sequences: 00:00:58
+bmax according to bmaxDivN setting: 724327615
+Using parameters --bmax 543245712 --dcv 1024
+  Doing ahead-of-time memory usage test
+  Passed!  Constructing with these parameters: --bmax 543245712 --dcv 1024
+Constructing suffix-array element generator
+Building DifferenceCoverSample
+  Building sPrime
+  Building sPrimeOrder
+  V-Sorting samples
+  V-Sorting samples time: 00:03:15
+  Allocating rank array
+  Ranking v-sort output
+  Ranking v-sort output time: 00:04:11
+  Invoking Larsson-Sadakane on ranks
+  Invoking Larsson-Sadakane on ranks time: 00:01:46
+  Sanity-checking and returning
+Building samples
+Reserving space for 12 sample suffixes
+Generating random suffixes
+QSorting 12 sample offsets, eliminating duplicates
+QSorting sample offsets, eliminating duplicates time: 00:00:00
+Multikey QSorting 12 samples
+  (Using difference cover)
+  Multikey QSorting samples time: 00:00:00
+Calculating bucket sizes
+Splitting and merging
+  Splitting and merging time: 00:00:00
+Avg bucket size: 2.89731e+09 (target: 543245711)
+Converting suffix-array elements to index image
+Allocating ftab, absorbFtab
+Entering Ebwt loop
+Getting block 1 of 1
+  No samples; assembling all-inclusive block
+
+  Sorting block of length 2897310462 for bucket 1
+  (Using difference cover)
+
+
+
+
+
+
+
+  Sorting block time: 01:54:30
+Returning block of 2897310463 for bucket 1
+
+
+Exited Ebwt loop
+fchr[A]: 0
+fchr[C]: 854963149
+fchr[G]: 1447929873
+fchr[T]: 2041255101
+fchr[$]: 2897310462
+Exiting Ebwt::buildToDisk()
+Returning from initFromVector
+Wrote 832005244 bytes to primary EBWT file: hg19.bowtie.1.ebwt
+Wrote 362163812 bytes to secondary EBWT file: hg19.bowtie.2.ebwt
+Re-opening _in1 and _in2 as input streams
+Returning from Ebwt constructor
+Headers:
+    len: 2897310462
+    bwtLen: 2897310463
+    sz: 724327616
+    bwtSz: 724327616
+    lineRate: 6
+    linesPerSide: 1
+    offRate: 5
+    offMask: 0xffffffe0
+    isaRate: -1
+    isaMask: 0xffffffff
+    ftabChars: 10
+    eftabLen: 20
+    eftabSz: 80
+    ftabLen: 1048577
+    ftabSz: 4194308
+    offsLen: 90540952
+    offsSz: 362163808
+    isaLen: 0
+    isaSz: 0
+    lineSz: 64
+    sideSz: 64
+    sideBwtSz: 56
+    sideBwtLen: 224
+    numSidePairs: 6467211
+    numSides: 12934422
+    numLines: 12934422
+    ebwtTotLen: 827803008
+    ebwtTotSz: 827803008
+    reverse: 0
+Total time for call to driver() for forward index: 04:08:56
+Reading reference sizes
+  Time reading reference sizes: 00:00:16
+Calculating joined length
+Writing header
+Reserving space for joined string
+Joining reference sequences
+  Time to join reference sequences: 00:00:24
+bmax according to bmaxDivN setting: 724327615
+Using parameters --bmax 543245712 --dcv 1024
+  Doing ahead-of-time memory usage test
+  Passed!  Constructing with these parameters: --bmax 543245712 --dcv 1024
+Constructing suffix-array element generator
+Building DifferenceCoverSample
+  Building sPrime
+  Building sPrimeOrder
+  V-Sorting samples
+  V-Sorting samples time: 00:01:52
+  Allocating rank array
+  Ranking v-sort output
+  Ranking v-sort output time: 00:00:32
+  Invoking Larsson-Sadakane on ranks
+  Invoking Larsson-Sadakane on ranks time: 00:00:46
+  Sanity-checking and returning
+Building samples
+Reserving space for 12 sample suffixes
+Generating random suffixes
+QSorting 12 sample offsets, eliminating duplicates
+QSorting sample offsets, eliminating duplicates time: 00:00:00
+Multikey QSorting 12 samples
+  (Using difference cover)
+  Multikey QSorting samples time: 00:00:00
+Calculating bucket sizes
+Splitting and merging
+  Splitting and merging time: 00:00:00
+Avg bucket size: 2.89731e+09 (target: 543245711)
+Converting suffix-array elements to index image
+Allocating ftab, absorbFtab
+Entering Ebwt loop
+Getting block 1 of 1
+  No samples; assembling all-inclusive block
+  Sorting block of length 2897310462 for bucket 1
+  (Using difference cover)
+  Sorting block time: 01:40:30
+Returning block of 2897310463 for bucket 1
+Exited Ebwt loop
+fchr[A]: 0
+fchr[C]: 854963149
+fchr[G]: 1447929873
+fchr[T]: 2041255101
+fchr[$]: 2897310462
+Exiting Ebwt::buildToDisk()
+Returning from initFromVector
+Wrote 832005244 bytes to primary EBWT file: hg19.bowtie.rev.1.ebwt
+Wrote 362163812 bytes to secondary EBWT file: hg19.bowtie.rev.2.ebwt
+Re-opening _in1 and _in2 as input streams
+Returning from Ebwt constructor
+Headers:
+    len: 2897310462
+    bwtLen: 2897310463
+    sz: 724327616
+    bwtSz: 724327616
+    lineRate: 6
+    linesPerSide: 1
+    offRate: 5
+    offMask: 0xffffffe0
+    isaRate: -1
+    isaMask: 0xffffffff
+    ftabChars: 10
+    eftabLen: 20
+    eftabSz: 80
+    ftabLen: 1048577
+    ftabSz: 4194308
+    offsLen: 90540952
+    offsSz: 362163808
+    isaLen: 0
+    isaSz: 0
+    lineSz: 64
+    sideSz: 64
+    sideBwtSz: 56
+    sideBwtLen: 224
+    numSidePairs: 6467211
+    numSides: 12934422
+    numLines: 12934422
+    ebwtTotLen: 827803008
+    ebwtTotSz: 827803008
+    reverse: 0
+Total time for backward call to driver() for mirror index: 02:01:54

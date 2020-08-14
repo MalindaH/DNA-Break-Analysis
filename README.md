@@ -41,6 +41,8 @@ Detailed steps in `windowanalysis.sh`:
 
 2. Analyze each chromosome by windows of user-defined size, calculate hypergeometric p-values, and do Benjamini-Hochberg correction to produce q-values using `windowanalysis.py`
     1) Scan each chromosome by windows of user-defined size
+&nbsp;
+
     2) hypergeometric test for p-values
     * For p-values:
       * N = total number in population = number of reads in the given chromosome for both treated and non-treated sample
@@ -49,6 +51,7 @@ Detailed steps in `windowanalysis.sh`:
       * x = number with condition in subset = number of reads in a given window for the treated sample
     * Document: https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.stats.hypergeom.html
     * Online p-value calculator: https://stattrek.com/online-calculator/hypergeometric.aspx
+&nbsp;
 
     3) Benjamini-Hochberg correction to produce q-values (q-values = corrected p-values for multiple hypothesis testing)
     * The corrected P value for a test is either the raw P value times m/i or the adjusted P value for the next higher raw P value, whichever is smaller (m = number of tests, i = rank of each test, with 1 the rank of the smallest P value)

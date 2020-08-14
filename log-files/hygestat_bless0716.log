@@ -1,0 +1,56 @@
+                           *      *  *     *  ******   ******   ******  *******     *           *******    
+                          *      *    *   *  *    *   *        *          *        * *            *        
+                         *      *      * *  *        *        *          *        *   *          *         
+                        ********        *  *  ***   ******   ******     *        *******        *          
+                       *      *        *  *    *   *             *     *        *       *      *           
+                      *      *        *  *    *   *             *     *        *         *    *            
+                     *      *        *  ******   ******   ******     *        *           *  *             
+                     ######################################################################################
+                     #                                                                                    #
+                     # Running hygestat_windows for BLESS  data (version hgw.1.2.3, September 2016)       #
+                     # This software comes without any warranty and .....                                 #
+                     # Copyright Rowicka Lab @ UTMB.                                                      #
+                     # Please contact Jules Nde jbndeken@utmb.edu for technical help                      #
+                     #                                                                                    #
+                     ######################################################################################
+Command line:
+hygestat -o fastq -p 1 -O hg19-output-treatA -G bowtie-files/hg19.bowtie -g human -F control.fastq -N bless -f treat.fastq -n bless -m human_mappability_45/ -k -r 48000 -w 1 -y cyto_bands.txt -Y fragile_bands_ncbi_76.txt 
+# reads processed: 64
+# reads with at least one reported alignment: 48 (75.00%)
+# reads that failed to align: 2 (3.12%)
+# reads with alignments suppressed due to -m: 14 (21.88%)
+Reported 48 alignments
+
+Verification Disabled
+# reads processed: 0
+# reads with at least one reported alignment: 0 (0.00%)
+# reads that failed to align: 0 (0.00%)
+No alignments
+
+Verification Disabled
+# reads processed: 1
+# reads with at least one reported alignment: 0 (0.00%)
+# reads that failed to align: 0 (0.00%)
+# reads with alignments suppressed due to -m: 1 (100.00%)
+No alignments
+
+Verification Disabled
+# reads processed: 0
+# reads with at least one reported alignment: 0 (0.00%)
+# reads that failed to align: 0 (0.00%)
+No alignments
+
+Verification Disabled
+Argument #1 = treat.fastq.dump.fa.TCGAGGTAGTA.fasta.bt.btt
+Argument #2 = human
+At least 2 arguments passed to script.
+Argument #1 = treat.fastq.dump.fa.TCGAGACGACG.fasta.bt.btt
+Argument #2 = human
+At least 2 arguments passed to script.
+Argument #1 = control.fastq.dump.fa.TCGAGGTAGTA.fasta.bt.btt
+Argument #2 = human
+At least 2 arguments passed to script.
+Argument #1 = control.fastq.dump.fa.TCGAGACGACG.fasta.bt.btt
+Argument #2 = human
+At least 2 arguments passed to script.
+Computing hygestat for window : 48000

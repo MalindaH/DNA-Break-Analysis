@@ -4,11 +4,12 @@ x=1;
 y=0;
 firstChr=1;
 lastChr=22;
-%winSize='48000';
+outputName='outputtest'
 
-chrnum=1
+chrnum=9
 c=int2str(chrnum);
-    filenameStem=strcat('outputhhhhhh_fwdpval.txt');
+    filenameStem=strcat(outputName,'chr',c,'_fwdpval.txt');
+    %filenameStem=strcat(outputName,'chr',c,'_fwdqval.txt');
     STEM=load (filenameStem);
     hfig=figure;
     set(hfig,'Position',[0,0,2000,550]);
@@ -17,5 +18,4 @@ c=int2str(chrnum);
     ylim([0 50.00000]);
     set(gca,'XTick',0);
     set(gca,'XTickLabel','');
-    %ylabel('-10.log_1_0({\itq}-value)','fontsize',12);
-    ylabel('-10log10(p_val)','fontsize',12);
+    ylabel('-10log_{10}(pval)','fontsize',12);

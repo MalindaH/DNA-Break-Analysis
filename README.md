@@ -44,19 +44,18 @@ Detailed steps in `windowanalysis.sh`:
 &nbsp;
 
     2) hypergeometric test for p-values
-    * For p-values:
-      * N = total number in population = number of reads in the given chromosome for both treated and non-treated sample
-      * k = total number with condition in population = number of reads in the given chromosome for the treated sample
-      * m = number in subset = number of reads in the given window for treated and non-treated samples
-      * x = number with condition in subset = number of reads in a given window for the treated sample
-    * Document: https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.stats.hypergeom.html
-    * Online p-value calculator: https://stattrek.com/online-calculator/hypergeometric.aspx
-&nbsp;
+        * For p-values:
+          * N = total number in population = number of reads in the given chromosome for both treated and non-treated sample
+          * k = total number with condition in population = number of reads in the given chromosome for the treated sample
+          * m = number in subset = number of reads in the given window for treated and non-treated samples
+          * x = number with condition in subset = number of reads in a given window for the treated sample
+        * Document: https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.stats.hypergeom.html
+        * Online p-value calculator: https://stattrek.com/online-calculator/hypergeometric.aspx
 
     3) Benjamini-Hochberg correction to produce q-values (q-values = corrected p-values for multiple hypothesis testing)
-    * The corrected P value for a test is either the raw P value times m/i or the adjusted P value for the next higher raw P value, whichever is smaller (m = number of tests, i = rank of each test, with 1 the rank of the smallest P value)
-    * Document: http://www.biostathandbook.com/multiplecomparisons.html
-    * Online B-H correction calculator: https://www.sdmproject.com/utilities/?show=FDR
+        * The corrected P value for a test is either the raw P value times m/i or the adjusted P value for the next higher raw P value, whichever is smaller (m = number of tests, i = rank of each test, with 1 the rank of the smallest P value)
+        * Document: http://www.biostathandbook.com/multiplecomparisons.html
+        * Online B-H correction calculator: https://www.sdmproject.com/utilities/?show=FDR
 
 **Output:**
 - Column 1: chromosome number

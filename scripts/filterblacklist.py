@@ -34,7 +34,8 @@ def remove_blacklist(chrnum, kind):
 
 
 
-print("Usage: python filterblacklist.py temp blacklist_files")
+#print("Usage: python filterblacklist.py temp blacklist_files")
+print("Removing blacklisted alignments......")
 chr_folder = sys.argv[1]
 bl_folder = sys.argv[2]
 x = 1
@@ -57,5 +58,7 @@ remove_blacklist('M', "t+")
 remove_blacklist('M', "c+")
 remove_blacklist('M', "t-")
 remove_blacklist('M', "c-")
+
+
 
 

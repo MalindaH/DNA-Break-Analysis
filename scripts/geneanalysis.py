@@ -11,6 +11,7 @@ def alignto_genes(chrnum):
             counter = 0
             p_pos = 0
             for lineg in genes:
+                p_val_sum = 0
                 start = int(lineg.split()[3])
                 end = int(lineg.split()[4])
                 #print("start = "+str(start)+", end = "+str(end))
@@ -23,11 +24,13 @@ def alignto_genes(chrnum):
                         continue
                     elif (p_end > start and p_end <= end) or (p_start >= start and p_start < end):
                         counter += 1
+                        p_val_sum += float(linep.split()[5])
                         p_pos += len(linep)
                         continue
                     elif p_start >= end:
                         if counter > 0:
-                            outputf.write(str(counter)+"\t"+lineg)
+                            p_val_avg = p_val_sum/float(counter)
+                            outputf.write(str(counter)+"\t%.10f\t"%(p_val_avg)+lineg)
                         # go back one line before break
                         peaks.seek(p_pos)
                         break
@@ -39,8 +42,8 @@ def alignto_genes(chrnum):
             outputf.close()
 
 
-# edited output: column 1 - number of peaks within gene; column 2 - chromosome number; 
-# column 3&4 - gene start & end positions; column 5 - gene name
+# edited output: column 1 - number of peaks within gene; column 2 - (average) p-value; column 3 - chromosome number; 
+# column 4&5 - gene start & end positions; column 6 - gene name
 def edit_output(chrnum):
     first = "gene_name \""
     last = "\"; "
@@ -50,15 +53,15 @@ def edit_output(chrnum):
             try:
                 start = s.rindex( first ) + len( first )
                 end = s.index( last, start )
-                outputf.write(s.split()[0]+"\t"+s.split()[1]+"\t"+s.split()[4]+"\t"+s.split()[5]+"\t"+s[start:end]+"\n")
+                outputf.write(s.split()[0]+"\t"+s.split()[1]+"\t"+s.split()[2]+"\t"+s.split()[4]+"\t"+s.split()[5]+"\t"+s[start:end]+"\n")
                 # print(s[start:end])
             except ValueError: # should not have an error here
                 print("error?!")
         outputf.close()
 
 
-# process csv file from Cancer gene census (Census_allThu Sep 17 03_10_33 2020.csv)
-# output file: column 1 - chromosome number; column 2&3 - start&end positions; column 4 - gene symbol; 
+# process csv file from Cancer gene census (Census_all-Sep17-2020.csv)
+# output files: column 1 - chromosome number; column 2&3 - start&end positions; column 4 - gene symbol; 
 # column 5 - gene name; column 6 - tumor type (somatic); column 7 - mutation
 def process_cancer_genes():
     with open(anno_cancer_file, "r") as csv_file:
@@ -98,6 +101,7 @@ def process_cancer_genes():
             for content in l_sorted:
                 sorted.write(content)
             sorted.close()
+            os.remove(anno_folder+"/chr"+str(x)+"_cancer-genes.txt")
         if(x == 22):
             y = 'X' # only chrX has cancer genes in this file
         if(x=='X'):
@@ -105,6 +109,44 @@ def process_cancer_genes():
         x += 1
         
 
+# align peaks to csv file from Cancer gene census (Census_all-Sep17-2020.csv)
+# output files: column 1 - number of peaks, column 2 - average p-value
+def alignto_cancer_genes(chrnum):
+    with open(anno_folder+"/chr"+str(chrnum)+"_cancer-genes-sorted.txt", "r") as genes:
+        with open(output_folder+"/"+output_name+"chr"+str(chrnum)+"_peaks.txt", "r") as peaks:
+            outputf = open(output_folder+"/chr"+str(chrnum)+"_sensitive-cancer-genes.txt", "a+")
+            counter = 0
+            p_pos = 0
+            for lineg in genes:
+                p_val_sum = 0
+                start = int(lineg.split()[1])
+                end = int(lineg.split()[2])
+                #print("start = "+str(start)+", end = "+str(end))
+                for linep in peaks:
+                    p_start = int(linep.split()[1])
+                    p_end = int(linep.split()[2])
+                    #print("p_start = "+str(p_start)+", p_end = "+str(p_end))
+                    if p_start < start and p_end <= start:
+                        p_pos += len(linep)
+                        continue
+                    elif (p_end > start and p_end <= end) or (p_start >= start and p_start < end):
+                        counter += 1
+                        p_val_sum += float(linep.split()[5])
+                        p_pos += len(linep)
+                        continue
+                    elif p_start >= end:
+                        if counter > 0:
+                            p_val_avg = p_val_sum/float(counter)
+                            outputf.write(str(counter)+"\t%.10f\t"%(p_val_avg)+lineg)
+                        # go back one line before break
+                        peaks.seek(p_pos)
+                        break
+                if peaks.readline() == "":
+                    break
+                else:
+                    peaks.seek(p_pos)
+                    counter = 0
+            outputf.close()
 
 
 
@@ -116,24 +158,29 @@ anno_folder = sys.argv[2]
 output_name = sys.argv[3]
 anno_cancer_file = sys.argv[4]
 
-# x = 1
-# while x <= 22:
-#     alignto_genes(x)
-#     x += 1
+x = 1
+while x <= 22:
+    alignto_genes(x)
+    x += 1
 
-# alignto_genes("X")
-# alignto_genes("Y")
-# alignto_genes("M")
+alignto_genes("X")
+alignto_genes("Y")
+alignto_genes("M")
 
-# x = 1
-# while x <= 22:
-#     edit_output(x)
-#     x += 1
+x = 1
+while x <= 22:
+    edit_output(x)
+    x += 1
 
-# edit_output("X")
-# edit_output("Y")
-# edit_output("M")
+edit_output("X")
+edit_output("Y")
+edit_output("M")
 
 
 #process_cancer_genes()
 
+x = 1
+while x <= 22:
+    alignto_cancer_genes(x)
+    x += 1
+alignto_cancer_genes("X") # only chrX has cancer genes in cancer file

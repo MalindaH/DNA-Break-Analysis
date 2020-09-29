@@ -92,6 +92,24 @@ function filterpeaks() {
     awk '$6<=0.05' output0827/${outputname}chrM.txt > output/${outputname}chrM_peaks.txt
 }
 
+function ranksensitivegenes() {
+    cat output/chr1_sensitive-genes.txt output/chr2_sensitive-genes.txt output/chr3_sensitive-genes.txt output/chr4_sensitive-genes.txt output/chr5_sensitive-genes.txt output/chr6_sensitive-genes.txt output/chr7_sensitive-genes.txt output/chr8_sensitive-genes.txt output/chr9_sensitive-genes.txt output/chr10_sensitive-genes.txt output/chr11_sensitive-genes.txt output/chr12_sensitive-genes.txt output/chr13_sensitive-genes.txt output/chr14_sensitive-genes.txt output/chr15_sensitive-genes.txt output/chr16_sensitive-genes.txt output/chr17_sensitive-genes.txt output/chr18_sensitive-genes.txt output/chr19_sensitive-genes.txt output/chr20_sensitive-genes.txt output/chr21_sensitive-genes.txt output/chr22_sensitive-genes.txt output/chrX_sensitive-genes.txt > output/allchr_sensitive-genes.txt
+    sort -k 1 -nr output/allchr_sensitive-genes.txt > output/allchr_sensitive-genes-sorted.txt
+
+    cat output/chr1_sensitive-cancer-genes.txt output/chr2_sensitive-cancer-genes.txt output/chr3_sensitive-cancer-genes.txt output/chr4_sensitive-cancer-genes.txt output/chr5_sensitive-cancer-genes.txt output/chr6_sensitive-cancer-genes.txt output/chr7_sensitive-cancer-genes.txt output/chr8_sensitive-cancer-genes.txt output/chr9_sensitive-cancer-genes.txt output/chr10_sensitive-cancer-genes.txt output/chr11_sensitive-cancer-genes.txt output/chr12_sensitive-cancer-genes.txt output/chr13_sensitive-cancer-genes.txt output/chr14_sensitive-cancer-genes.txt output/chr15_sensitive-cancer-genes.txt output/chr16_sensitive-cancer-genes.txt output/chr17_sensitive-cancer-genes.txt output/chr18_sensitive-cancer-genes.txt output/chr19_sensitive-cancer-genes.txt output/chr20_sensitive-cancer-genes.txt output/chr21_sensitive-cancer-genes.txt output/chr22_sensitive-cancer-genes.txt output/chrX_sensitive-cancer-genes.txt > output/allchr_sensitive-cancer-genes.txt
+    sort -k 1 -nr output/allchr_sensitive-cancer-genes.txt > output/allchr_sensitive-cancer-genes-sorted.txt
+}
+
+function debug() {
+    for((x=1;x<=22;x++)); do
+        cat BLESS_output.txt | grep -P "chr${x}\t" | awk '$6<=0.05'  > output/${outputname}chr${x}_peaks.txt
+    done
+
+    cat BLESS_output.txt | grep -P "chrX\t" | awk '$6<=0.05' > output/${outputname}chrX_peaks.txt
+    cat BLESS_output.txt | grep -P "chrY\t" | awk '$6<=0.05' > output/${outputname}chrY_peaks.txt
+    cat BLESS_output.txt | grep -P "chrM\t" | awk '$6<=0.05' > output/${outputname}chrM_peaks.txt
+}
+
 
 
 
@@ -125,7 +143,10 @@ fi
 # generate gene annotation files for gene analysis
 #forGTF
 
-python geneanalysis.py output annotation_files ${4} ${7}
+# python geneanalysis.py output annotation_files ${4} ${7}
+
+ranksensitivegenes
 
 
-
+# for debugging:
+# debug

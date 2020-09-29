@@ -2,6 +2,7 @@ import sys
 import os
 import csv
 import numpy as np
+import math
 
 # align to genes from processed gtf file (gencode.v34.annotation.gtf)
 def alignto_genes(chrnum):
@@ -24,13 +25,15 @@ def alignto_genes(chrnum):
                         continue
                     elif (p_end > start and p_end <= end) or (p_start >= start and p_start < end):
                         counter += 1
-                        p_val_sum += float(linep.split()[5])
+                        # p_val_sum += float(linep.split()[5])
+                        p_val_sum += float(linep.split()[3])
                         p_pos += len(linep)
                         continue
                     elif p_start >= end:
                         if counter > 0:
                             p_val_avg = p_val_sum/float(counter)
-                            outputf.write(str(counter)+"\t%.10f\t"%(p_val_avg)+lineg)
+                            p_val_log = -math.log(p_val_avg, 10)
+                            outputf.write(str(counter)+"\t%.10f\t"%(p_val_log)+lineg)
                         # go back one line before break
                         peaks.seek(p_pos)
                         break
@@ -42,7 +45,7 @@ def alignto_genes(chrnum):
             outputf.close()
 
 
-# edited output: column 1 - number of peaks within gene; column 2 - (average) p-value; column 3 - chromosome number; 
+# edited output: column 1 - number of peaks within gene; column 2 - -log_10(average p-value); column 3 - chromosome number; 
 # column 4&5 - gene start & end positions; column 6 - gene name
 def edit_output(chrnum):
     first = "gene_name \""
@@ -110,7 +113,7 @@ def process_cancer_genes():
         
 
 # align peaks to csv file from Cancer gene census (Census_all-Sep17-2020.csv)
-# output files: column 1 - number of peaks, column 2 - average p-value
+# output files: column 1 - number of peaks, column 2 - -log_10(average p-value)
 def alignto_cancer_genes(chrnum):
     with open(anno_folder+"/chr"+str(chrnum)+"_cancer-genes-sorted.txt", "r") as genes:
         with open(output_folder+"/"+output_name+"chr"+str(chrnum)+"_peaks.txt", "r") as peaks:
@@ -131,13 +134,15 @@ def alignto_cancer_genes(chrnum):
                         continue
                     elif (p_end > start and p_end <= end) or (p_start >= start and p_start < end):
                         counter += 1
-                        p_val_sum += float(linep.split()[5])
+                        # p_val_sum += float(linep.split()[5])
+                        p_val_sum += float(linep.split()[3])
                         p_pos += len(linep)
                         continue
                     elif p_start >= end:
                         if counter > 0:
                             p_val_avg = p_val_sum/float(counter)
-                            outputf.write(str(counter)+"\t%.10f\t"%(p_val_avg)+lineg)
+                            p_val_log = -math.log(p_val_avg, 10)
+                            outputf.write(str(counter)+"\t%.10f\t"%(p_val_log)+lineg)
                         # go back one line before break
                         peaks.seek(p_pos)
                         break

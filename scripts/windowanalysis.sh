@@ -1,49 +1,35 @@
 #!/bin/bash
-# Usage: ./windowanalysis.sh test0825/bowtie-outputHAboth.txt test0825/bowtie-outputHC.txt 48000 outputtest08262 hg19-consensusBlacklist.bed
+# Usage: ./windowanalysis.sh test0825/bowtie-outputHAboth.txt test0825/bowtie-outputHC.txt 48000 outputtest0827 hg19-consensusBlacklist.bed ../genome-annotation/gencode.v34.annotation.gtf ../genome-annotation/Census_all-Sep17-2020.csv
 
 treated=${1}; control=${2}
-#wsize=${3}; outputname=${4}
-blacklist=${5}
+#wsize=${3}; 
+outputname=${4}; blacklist=${5}; annotationfilegtf=${6}; annotationfilecancer=${7}
 
 function filterSort() {
+    echo -e "Filtering and sorting alignments by chromosomes......"
     if [ ! -r temp ]; then
         mkdir temp
     fi
 
-    # keep alignments of length >= 23nt
-    cat $treated | grep + | awk 'length($6) > 23' > temp/allt+hits.txt
-    cat $control | grep + | awk 'length($6) > 23' > temp/allc+hits.txt
-    cat $treated | grep - | awk 'length($6) > 23' > temp/allt-hits.txt
-    cat $control | grep - | awk 'length($6) > 23' > temp/allc-hits.txt
     # filter mismatch: (not needed here) | awk 'length($9) == 0'
 
     for((x=1;x<=22;x++)); do
-        # filter repetitive reads, and sort in numerical order
-        cat temp/allt+hits.txt | grep  -P "chr${x}\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chr${x}t+hitssorted.txt
-        cat temp/allc+hits.txt | grep  -P "chr${x}\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chr${x}c+hitssorted.txt
-        cat temp/allt-hits.txt | grep  -P "chr${x}\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chr${x}t-hitssorted.txt
-        cat temp/allc-hits.txt | grep  -P "chr${x}\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chr${x}c-hitssorted.txt
+        # keep alignments of length >= 23nt, filter repetitive reads, and sort in numerical order
+        cat $treated | awk 'length($6) > 23' | grep -P "chr${x}\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chr${x}t_hitssorted.txt
+        cat $control | awk 'length($6) > 23' | grep -P "chr${x}\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chr${x}c_hitssorted.txt
     done
 
-    cat temp/allt+hits.txt | grep  -P "chrX\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrXt+hitssorted.txt
-    cat temp/allc+hits.txt | grep  -P "chrX\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrXc+hitssorted.txt
-    cat temp/allt-hits.txt | grep  -P "chrX\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrXt-hitssorted.txt
-    cat temp/allc-hits.txt | grep  -P "chrX\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrXc-hitssorted.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrX\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrXt_hitssorted.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrX\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrXc_hitssorted.txt
 
-    cat temp/allt+hits.txt | grep  -P "chrY\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrYt+hitssorted.txt
-    cat temp/allc+hits.txt | grep  -P "chrY\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrYc+hitssorted.txt
-    cat temp/allt-hits.txt | grep  -P "chrY\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrYt-hitssorted.txt
-    cat temp/allc-hits.txt | grep  -P "chrY\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrYc-hitssorted.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrY\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrYt_hitssorted.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrY\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrYc_hitssorted.txt
    
-    cat temp/allt+hits.txt | grep  -P "chrM\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrMt+hitssorted.txt
-    cat temp/allc+hits.txt | grep  -P "chrM\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrMc+hitssorted.txt
-    cat temp/allt-hits.txt | grep  -P "chrM\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrMt-hitssorted.txt
-    cat temp/allc-hits.txt | grep  -P "chrM\t" | awk '!seen[$6]++' | sort -k 5 -n > temp/chrMc-hitssorted.txt
-
-    #rm temp/allt+hits.txt temp/allc+hits.txt temp/allt-hits.txt temp/allc-hits.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrMt_hitssorted.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrMc_hitssorted.txt
 }
 
-function blacklistPrep(){
+function blacklistPrep() {
     if [ ! -r blacklist_files ]; then
         mkdir blacklist_files
     fi
@@ -58,27 +44,64 @@ function blacklistPrep(){
 }
 
 # generate files for plotting using MATLAB
-function forMatlab(){
+function forMatlab() {
     for((x=1;x<=22;x++)); do
-        awk '{print $2,$6}' output/${1}chr${x}_fwd.txt > output/${1}chr${x}_fwdpval.txt
-        awk '{print $2,$7}' output/${1}chr${x}_fwd.txt > output/${1}chr${x}_fwdqval.txt
+        awk '{print $2,$6}' output/${1}chr${x}.txt > output/${1}chr${x}_pval.txt
+        awk '{print $2,$7}' output/${1}chr${x}.txt > output/${1}chr${x}_qval.txt
     done
 
-    awk '{print $2,$6}' output/${1}chrX_fwd.txt > output/${1}chrX_fwdpval.txt
-    awk '{print $2,$6}' output/${1}chrY_fwd.txt > output/${1}chrY_fwdpval.txt
-    awk '{print $2,$6}' output/${1}chrM_fwd.txt > output/${1}chrM_fwdpval.txt
+    awk '{print $2,$6}' output/${1}chrX.txt > output/${1}chrX_pval.txt
+    awk '{print $2,$7}' output/${1}chrX.txt > output/${1}chrX_qval.txt
+    awk '{print $2,$6}' output/${1}chrY.txt > output/${1}chrY_pval.txt
+    awk '{print $2,$7}' output/${1}chrY.txt > output/${1}chrY_qval.txt
+    awk '{print $2,$6}' output/${1}chrM.txt > output/${1}chrM_pval.txt
+    awk '{print $2,$7}' output/${1}chrM.txt > output/${1}chrM_qval.txt
+}
+
+function forGTF() {
+    if [ ! -r annotation_files ]; then
+        mkdir annotation_files
+    fi
+
+    grep -P "gene\t" $annotationfilegtf > annotation_files/annotation-genes.gtf
+    grep -P "protein_coding" $annotationfilegtf > annotation_files/annotation-protein-coding.gtf
+
+    for((x=1;x<=22;x++)); do
+        grep -P "chr$x\t" annotation_files/annotation-genes.gtf > annotation_files/chr${x}_annotation-genes.gtf
+        grep -P "chr$x\t" annotation_files/annotation-protein-coding.gtf > annotation_files/chr${x}_annotation-protein-coding.gtf
+    done
+
+    grep -P "chrX\t" annotation_files/annotation-genes.gtf > annotation_files/chrX_annotation-genes.gtf
+    grep -P "chrX\t" annotation_files/annotation-protein-coding.gtf > annotation_files/chrX_annotation-protein-coding.gtf
+
+    grep -P "chrY\t" annotation_files/annotation-genes.gtf > annotation_files/chrY_annotation-genes.gtf
+    grep -P "chrY\t" annotation_files/annotation-protein-coding.gtf > annotation_files/chrY_annotation-protein-coding.gtf
+
+    grep -P "chrM\t" annotation_files/annotation-genes.gtf > annotation_files/chrM_annotation-genes.gtf
+    grep -P "chrM\t" annotation_files/annotation-protein-coding.gtf > annotation_files/chrM_annotation-protein-coding.gtf
+    
+}
+
+function filterpeaks() {
+    for((x=1;x<=22;x++)); do
+        awk '$6<=0.05' output0827/${outputname}chr${x}.txt > output/${outputname}chr${x}_peaks.txt
+    done
+
+    awk '$6<=0.05' output0827/${outputname}chrX.txt > output/${outputname}chrX_peaks.txt
+    awk '$6<=0.05' output0827/${outputname}chrY.txt > output/${outputname}chrY_peaks.txt
+    awk '$6<=0.05' output0827/${outputname}chrM.txt > output/${outputname}chrM_peaks.txt
 }
 
 
 
-# check “<output-filename>_fwd.txt” and “<output-filename>_rev.txt” does not exist in the current directory
 
-if [ $# -ne 5 ]; then
-    echo "Usage: ./windowanalysis.sh <bowtie-output-treated> <bowtie-output-control> <window-size> <output-filename> <blacklist-file>"
-    exit 1
+# check “<output-filename>.txt” does not exist in the current directory
+
+if [ $# -ne 7 ]; then
+    echo "Usage: ./windowanalysis.sh <bowtie-output-treated> <bowtie-output-control> <window-size> <output-filename> <blacklist-file> <gencode.gtf-annotation-file> <cancer-gene-consensus.csv-annotation-file>"
+    exit 10
 fi
 
-echo -e "Filtering and sorting alignments by chromosomes......"
 #filterSort
 
 # Remove blacklisted alignments:
@@ -89,9 +112,20 @@ echo -e "Filtering and sorting alignments by chromosomes......"
 if [ ! -r output ]; then
     mkdir output
 fi
-python windowanalysis.py temp $3 $4 blacklist_files
+#python windowanalysis.py temp $3 $4 blacklist_files
+# check error code
+
 
 # generate files for plotting using MATLAB
-forMatlab $4
+#forMatlab $4
+
+# generate peak files
+#filterpeaks
+
+# generate gene annotation files for gene analysis
+#forGTF
+
+python geneanalysis.py output annotation_files ${4} ${7}
+
 
 

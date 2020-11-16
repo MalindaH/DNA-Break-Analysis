@@ -1,9 +1,9 @@
 #!/bin/bash
-# Usage: ./windowanalysis.sh test0825/bowtie-outputHAboth.txt test0825/bowtie-outputHC.txt 48000 outputtest0827 hg19-consensusBlacklist.bed ../genome-annotation/gencode.v34.annotation.gtf ../genome-annotation/Census_all-Sep17-2020.csv
+# Usage: ./windowanalysis.sh test0825/bowtie-outputHAboth.txt test0825/bowtie-outputHC.txt 48000 outputtest0827 hg19-consensusBlacklist.bed ../genome-annotation/gencode.v34.annotation.gtf ../genome-annotation/Census_all-Sep17-2020.csv ../bowtie-files/hg19.fa
 
 treated=${1}; control=${2}
 #wsize=${3}; 
-outputname=${4}; blacklist=${5}; annotationfilegtf=${6}; annotationfilecancer=${7}
+outputname=${4}; blacklist=${5}; annotationfilegtf=${6}; annotationfilecancer=${7}; hgfile=${8}
 
 function filterSort() {
     echo -e "Filtering and sorting alignments by chromosomes......"
@@ -27,6 +27,28 @@ function filterSort() {
    
     cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrMt_hitssorted.txt
     cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrMc_hitssorted.txt
+}
+
+function filterSort_KeepRepetitive() {
+    echo -e "Filtering and sorting alignments by chromosomes (keep repetitive reads)......"
+    if [ ! -r temp1 ]; then
+        mkdir temp1
+    fi
+
+    for((x=1;x<=22;x++)); do
+        # keep alignments of length >= 23nt, and sort in numerical order
+        cat $treated | awk 'length($6) > 23' | grep -P "chr${x}\t" | sort -k 5 -n > temp1/chr${x}t_hitssorted.txt
+        cat $control | awk 'length($6) > 23' | grep -P "chr${x}\t" | sort -k 5 -n > temp1/chr${x}c_hitssorted.txt
+    done
+
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrX\t" | sort -k 5 -n > temp1/chrXt_hitssorted.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrX\t" | sort -k 5 -n > temp1/chrXc_hitssorted.txt
+
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrY\t" | sort -k 5 -n > temp1/chrYt_hitssorted.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrY\t" | sort -k 5 -n > temp1/chrYc_hitssorted.txt
+   
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | sort -k 5 -n > temp1/chrMt_hitssorted.txt
+    cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | sort -k 5 -n > temp1/chrMc_hitssorted.txt
 }
 
 function blacklistPrep() {
@@ -115,14 +137,14 @@ function debug() {
 
 # check “<output-filename>.txt” does not exist in the current directory
 
-if [ $# -ne 7 ]; then
-    echo "Usage: ./windowanalysis.sh <bowtie-output-treated> <bowtie-output-control> <window-size> <output-filename> <blacklist-file> <gencode.gtf-annotation-file> <cancer-gene-consensus.csv-annotation-file>"
+if [ $# -ne 8 ]; then
+    echo "Usage: ./windowanalysis.sh <bowtie-output-treated> <bowtie-output-control> <window-size> <output-filename> <blacklist-file> <gencode.gtf-annotation-file> <cancer-gene-consensus.csv-annotation-file> <human-reference-genome-file>"
     exit 10
 fi
 
 #filterSort
 
-# Remove blacklisted alignments:
+## Remove blacklisted alignments:
 #blacklistPrep
 #python filterblacklist.py temp blacklist_files
 
@@ -131,22 +153,27 @@ if [ ! -r output ]; then
     mkdir output
 fi
 #python windowanalysis.py temp $3 $4 blacklist_files
-# check error code
+## check error code
 
 
-# generate files for plotting using MATLAB
+## generate files for plotting using MATLAB
 #forMatlab $4
 
-# generate peak files
+## generate peak files
 #filterpeaks
 
-# generate gene annotation files for gene analysis
+## generate gene annotation files for gene analysis
 #forGTF
 
 # python geneanalysis.py output annotation_files ${4} ${7}
 
-ranksensitivegenes
+# ranksensitivegenes
 
-
-# for debugging:
+## for debugging:
 # debug
+
+## for statistics of DSB sequences
+# filterSort_KeepRepetitive
+# python filterblacklist.py temp1 blacklist_files
+
+python dsbsequence.py temp1 ${hgfile} output

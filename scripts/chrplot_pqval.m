@@ -5,13 +5,13 @@ y=0;
 firstChr=1;
 lastChr=22;
 
-outputName='outputtest0825';
-pq='p';
-chrnum=1;
+outputName='outputtest0826';
+pq='q';
+chrnum=10;
 
 c=int2str(chrnum);
 
-    filenameStem=strcat(outputName,'chr',c,'_fwd',pq,'val.txt');
+    filenameStem=strcat(outputName,'chr',c,'_',pq,'val.txt');
     STEM=load (filenameStem);
     hfig=figure;
     set(hfig,'Position',[0,0,2000,550]);

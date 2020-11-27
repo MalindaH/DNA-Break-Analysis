@@ -15,7 +15,7 @@ def remove_blacklist(chrnum, kind):
                 for linef in f:
                     position = int(linef.split()[4])
                     if position < start:
-                        if "TTAGGGTTAGGG" not in linef.split()[5] and "CCCTAACCCTAA" not in linef.split()[5]: # filter out telomere sequences
+                        if linef.split()[5] not in "TTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGG" and linef.split()[5] not in "CCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA" and "TTAGGGTTAGGG" not in linef.split()[5] and "CCCTAACCCTAA" not in linef.split()[5]: # filter out telomere sequences
                             outputf.write(linef)
                         f_pos += len(linef)
                     elif position >= start and position <= end:
@@ -28,7 +28,7 @@ def remove_blacklist(chrnum, kind):
                         break
             # print remaining lines
             for linef in f:
-                if "TTAGGGTTAGGG" not in linef.split()[5]  and "CCCTAACCCTAA" not in linef.split()[5]: # filter out telomere sequences
+                if "TTAGGGTTAGGG" not in linef.split()[5]  and "CCCTAACCCTAA" not in linef.split()[5] and linef.split()[5] not in "TTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGG" and linef.split()[5] not in "CCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA": # filter out telomere sequences
                     outputf.write(linef)
             outputf.close()
             #print("deleted "+str(counter)+" lines")
@@ -36,22 +36,28 @@ def remove_blacklist(chrnum, kind):
 
 
 
-#print("Usage: python filterblacklist.py temp blacklist_files")
+#print("Usage: python filterblacklist.py temp blacklist_files $no_control")
 print("Removing blacklisted alignments......")
 chr_folder = sys.argv[1]
 bl_folder = sys.argv[2]
+no_control = sys.argv[3]
+
 x = 1
 while x <= 22:
     remove_blacklist(x, "t")
-    remove_blacklist(x, "c")
+    if no_control == '0':
+        remove_blacklist(x, "c")
     x+=1
     
 remove_blacklist('X', "t")
-remove_blacklist('X', "c")
+if no_control == '0':
+    remove_blacklist('X', "c")
 remove_blacklist('Y', "t")
-remove_blacklist('Y', "c")
+if no_control == '0':
+    remove_blacklist('Y', "c")
 remove_blacklist('M', "t")
-remove_blacklist('M', "c")
+if no_control == '0':
+    remove_blacklist('M', "c")
 
 
 

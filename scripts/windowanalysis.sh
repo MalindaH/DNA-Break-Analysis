@@ -1,9 +1,54 @@
 #!/bin/bash
-# Usage: ./windowanalysis.sh test0825/bowtie-outputHAboth.txt test0825/bowtie-outputHC.txt 48000 outputtest0827 hg19-consensusBlacklist.bed ../genome-annotation/gencode.v34.annotation.gtf ../genome-annotation/Census_all-Sep17-2020.csv ../bowtie-files/hg19.fa
+# Usage: ./windowanalysis.sh -t bowtie-output/bowtie-outputA.txt -c bowtie-output/bowtie-outputC.txt -s 48000 -o outputtest1125 -B genome-annotation/GRCh38_unified_blacklist.bed -C genome-annotation/Census_all-Sep17-2020.csv -G genome-annotation/gencode.v34.annotation.gtf -hg bowtie-files/GRCh38
+# Usage: ./windowanalysis.sh --no-control -t bowtie-outputA.txt -s 48000 -o outputtest1125 -B genome-annotation/GRCh38_unified_blacklist.bed -G genome-annotation/gencode.v34.annotation.gtf -C genome-annotation/Census_all-Sep17-2020.csv -hg bowtie-files/GRCh38
 
-treated=${1}; control=${2}
-#wsize=${3}; 
-outputname=${4}; blacklist=${5}; annotationfilegtf=${6}; annotationfilecancer=${7}; hgfile=${8}
+function show_help() {
+    echo -e "Usage: ./windowanalysis.sh [options]\n\n[options] include: (all are mandatory)\t
+        --no-control\n\t-t | --treated <bowtie-output-treated>\n\t-c | --control <bowtie-output-control>\n\t-s <window-size>\t
+        -o | --output <output-filename>\n\t-B <blacklist-file>\n\t-G <gencode.gtf-annotation-file>\t
+        -C <cancer-gene-consensus.csv-annotation-file> \n\t-hg <human-reference-genome-file>";
+}
+
+if [ $# -ne 15 ] && [ $# -ne 16 ]; then  
+    show_help;
+    exit 2
+fi
+
+no_control=0;
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -h|--help) show_help; exit 1 ;;
+        --no-control) no_control=1 ;;
+        -t|--treated) treated="$2"; shift ;;
+        -c|--control) control="$2"; shift ;;
+        -s) wsize="$2"; shift ;;
+        -o|--output) outputname="$2"; shift ;;
+        -B) blacklist="$2"; shift ;;
+        -G) annotationfilegtf="$2"; shift ;;
+        -C) annotationfilecancer="$2"; shift ;;
+        -hg) hgfile="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1" ;;
+    esac
+    shift
+done
+
+echo "Inputs:"
+echo " -- treated (bowtie output): $treated"
+if [ $no_control ]; then
+    echo " -- no control"
+else
+    echo " -- control (bowtie output): $control"
+fi
+echo " -- window size: $wsize"
+echo " -- output name: $outputname"
+echo " -- blacklist file (.bed): $blacklist"
+echo " -- annotation file (gencode, .gtf): $annotationfilegtf"
+echo " -- annotation file (cancer census, .csv): $annotationfilecancer"
+echo " -- human reference genome file or folder (.fa): $hgfile"
+
+## check files exist
+
 
 function filterSort() {
     echo -e "Filtering and sorting alignments by chromosomes......"
@@ -12,43 +57,60 @@ function filterSort() {
     fi
 
     # filter mismatch: (not needed here) | awk 'length($9) == 0'
+    # keep alignments of length >= 23nt, awk 'length($6) > 23' (not for now)
 
     for((x=1;x<=22;x++)); do
-        # keep alignments of length >= 23nt, filter repetitive reads, and sort in numerical order
-        cat $treated | awk 'length($6) > 23' | grep -P "chr${x}\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chr${x}t_hitssorted.txt
-        cat $control | awk 'length($6) > 23' | grep -P "chr${x}\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chr${x}c_hitssorted.txt
+        # filter repetitive reads, and sort in numerical order
+        cat $treated | grep -P "chr${x}\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chr${x}t_hitssorted.txt
+        if [ ! $no_control ]; then
+            cat $control | grep -P "chr${x}\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chr${x}c_hitssorted.txt
+        fi
     done
 
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrX\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrXt_hitssorted.txt
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrX\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrXc_hitssorted.txt
+    cat $treated | grep  -P "chrX\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrXt_hitssorted.txt
+    if [ ! $no_control ]; then
+        cat $control | grep  -P "chrX\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrXc_hitssorted.txt
+    fi
 
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrY\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrYt_hitssorted.txt
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrY\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrYc_hitssorted.txt
-   
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrMt_hitssorted.txt
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrMc_hitssorted.txt
+    cat $treated | grep  -P "chrY\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrYt_hitssorted.txt
+    if [ ! $no_control ]; then
+        cat $control | grep  -P "chrY\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrYc_hitssorted.txt
+    fi
+
+    cat $treated | grep  -P "chrM\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrMt_hitssorted.txt
+    if [ ! $no_control ]; then
+        cat $control | grep  -P "chrM\t" | awk '!seen[$5]++' | sort -k 5 -n > temp/chrMc_hitssorted.txt
+    fi
 }
 
 function filterSort_KeepRepetitive() {
     echo -e "Filtering and sorting alignments by chromosomes (keep repetitive reads)......"
-    if [ ! -r temp1 ]; then
-        mkdir temp1
+    if [ ! -r ${1} ]; then
+        mkdir ${1}
     fi
 
     for((x=1;x<=22;x++)); do
-        # keep alignments of length >= 23nt, and sort in numerical order
-        cat $treated | awk 'length($6) > 23' | grep -P "chr${x}\t" | sort -k 5 -n > temp1/chr${x}t_hitssorted.txt
-        cat $control | awk 'length($6) > 23' | grep -P "chr${x}\t" | sort -k 5 -n > temp1/chr${x}c_hitssorted.txt
+        # sort in numerical order
+        cat $treated | grep -P "chr${x}\t" | sort -k 5 -n > ${1}/chr${x}t_hitssorted.txt
+        if [ ! $no_control ]; then
+            cat $control | grep -P "chr${x}\t" | sort -k 5 -n > ${1}/chr${x}c_hitssorted.txt
+        fi
     done
 
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrX\t" | sort -k 5 -n > temp1/chrXt_hitssorted.txt
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrX\t" | sort -k 5 -n > temp1/chrXc_hitssorted.txt
+    cat $treated | grep  -P "chrX\t" | sort -k 5 -n > ${1}/chrXt_hitssorted.txt
+    if [ ! $no_control ]; then
+        cat $control | grep  -P "chrX\t" | sort -k 5 -n > ${1}/chrXc_hitssorted.txt
+    fi
 
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrY\t" | sort -k 5 -n > temp1/chrYt_hitssorted.txt
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrY\t" | sort -k 5 -n > temp1/chrYc_hitssorted.txt
+    cat $treated | grep  -P "chrY\t" | sort -k 5 -n > ${1}/chrYt_hitssorted.txt
+    if [ ! $no_control ]; then
+        cat $control | grep  -P "chrY\t" | sort -k 5 -n > ${1}/chrYc_hitssorted.txt
+    fi
    
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | sort -k 5 -n > temp1/chrMt_hitssorted.txt
-    cat $treated | awk 'length($6) > 23' | grep  -P "chrM\t" | sort -k 5 -n > temp1/chrMc_hitssorted.txt
+    cat $treated | grep  -P "chrM\t" | sort -k 5 -n > ${1}/chrMt_hitssorted.txt
+    if [ ! $no_control ]; then
+        cat $control | grep  -P "chrM\t" | sort -k 5 -n > ${1}/chrMc_hitssorted.txt
+    fi
 }
 
 function blacklistPrep() {
@@ -69,15 +131,15 @@ function blacklistPrep() {
 function forMatlab() {
     for((x=1;x<=22;x++)); do
         awk '{print $2,$6}' output/${1}chr${x}.txt > output/${1}chr${x}_pval.txt
-        awk '{print $2,$7}' output/${1}chr${x}.txt > output/${1}chr${x}_qval.txt
+        # awk '{print $2,$7}' output/${1}chr${x}.txt > output/${1}chr${x}_qval.txt
     done
 
     awk '{print $2,$6}' output/${1}chrX.txt > output/${1}chrX_pval.txt
-    awk '{print $2,$7}' output/${1}chrX.txt > output/${1}chrX_qval.txt
+    # awk '{print $2,$7}' output/${1}chrX.txt > output/${1}chrX_qval.txt
     awk '{print $2,$6}' output/${1}chrY.txt > output/${1}chrY_pval.txt
-    awk '{print $2,$7}' output/${1}chrY.txt > output/${1}chrY_qval.txt
+    # awk '{print $2,$7}' output/${1}chrY.txt > output/${1}chrY_qval.txt
     awk '{print $2,$6}' output/${1}chrM.txt > output/${1}chrM_pval.txt
-    awk '{print $2,$7}' output/${1}chrM.txt > output/${1}chrM_qval.txt
+    # awk '{print $2,$7}' output/${1}chrM.txt > output/${1}chrM_qval.txt
 }
 
 function forGTF() {
@@ -101,7 +163,6 @@ function forGTF() {
 
     grep -P "chrM\t" annotation_files/annotation-genes.gtf > annotation_files/chrM_annotation-genes.gtf
     grep -P "chrM\t" annotation_files/annotation-protein-coding.gtf > annotation_files/chrM_annotation-protein-coding.gtf
-    
 }
 
 function filterpeaks() {
@@ -134,30 +195,23 @@ function debug() {
 
 
 
-
-# check “<output-filename>.txt” does not exist in the current directory
-
-if [ $# -ne 8 ]; then
-    echo "Usage: ./windowanalysis.sh <bowtie-output-treated> <bowtie-output-control> <window-size> <output-filename> <blacklist-file> <gencode.gtf-annotation-file> <cancer-gene-consensus.csv-annotation-file> <human-reference-genome-file>"
-    exit 10
-fi
-
-#filterSort
+# filterSort
+# filterSort_KeepRepetitive temp
 
 ## Remove blacklisted alignments:
-#blacklistPrep
-#python filterblacklist.py temp blacklist_files
+# blacklistPrep
+# python filterblacklist.py temp blacklist_files $no_control
 
 # Calculate p and q values:
 if [ ! -r output ]; then
     mkdir output
 fi
-#python windowanalysis.py temp $3 $4 blacklist_files
+# python windowanalysis.py temp $wsize $outputname blacklist_files
 ## check error code
 
 
 ## generate files for plotting using MATLAB
-#forMatlab $4
+# forMatlab $outputname
 
 ## generate peak files
 #filterpeaks
@@ -165,15 +219,16 @@ fi
 ## generate gene annotation files for gene analysis
 #forGTF
 
-# python geneanalysis.py output annotation_files ${4} ${7}
+# python geneanalysis.py output annotation_files $outputname $annotationfilecancer
 
 # ranksensitivegenes
 
 ## for debugging:
 # debug
 
-## for statistics of DSB sequences
-# filterSort_KeepRepetitive
-# python filterblacklist.py temp1 blacklist_files
+## for statistics of DSB sequence bias
+# filterSort_KeepRepetitive temp
+# blacklistPrep
+# python filterblacklist.py temp1 blacklist_files $no_control
 
-python dsbsequence.py temp1 ${hgfile} output
+python dsbsequence.py temp ${hgfile} output blacklist_files $no_control /DSB-count-1126.csv /DSB-count-hg-1126.csv

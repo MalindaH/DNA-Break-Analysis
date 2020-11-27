@@ -1,0 +1,7 @@
+2020/11/25
+bowtie -q ./bowtie-files/hg38.bowtie -v 0 -M 1 --best ../NHEK_break_seq_rep1/break_out.fastq bowtie-outputA.txt
+# reads processed: 3647870
+# reads with at least one reported alignment: 2506962 (68.72%)
+# reads that failed to align: 503636 (13.81%)
+# reads with alignments sampled due to -M: 637272 (17.47%)
+Reported 2506962 alignments

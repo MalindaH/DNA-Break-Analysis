@@ -1,0 +1,220 @@
+bowtie-build chr1.fa,chr2.fa,chr3.fa,chr4.fa,chr5.fa,chr6.fa,chr7.fa,chr8.fa,chr9.fa,chr10.fa,chr11.fa,chr12.fa,chr13.fa,chr14.fa,chr15.fa,chr16.fa,chr17.fa,chr18.fa,chr19.fa,chr20.fa,chr21.fa,chr22.fa,chrX.fa,chrY.fa,chrM.fa ../hg38.bowtie
+
+Settings:
+  Output files: "../hg38.bowtie.*.ebwt"
+  Line rate: 6 (line is 64 bytes)
+  Lines per side: 1 (side is 64 bytes)
+  Offset rate: 5 (one in 32)
+  FTable chars: 10
+  Strings: unpacked
+  Max bucket size: default
+  Max bucket size, sqrt multiplier: default
+  Max bucket size, len divisor: 4
+  Difference-cover sample period: 1024
+  Endianness: little
+  Actual local endianness: little
+  Sanity checking: disabled
+  Assertions: disabled
+  Random seed: 0
+  Sizeofs: void*:8, int:4, long:8, size_t:8
+Input files DNA, FASTA:
+  chr1.fa
+  chr2.fa
+  chr3.fa
+  chr4.fa
+  chr5.fa
+  chr6.fa
+  chr7.fa
+  chr8.fa
+  chr9.fa
+  chr10.fa
+  chr11.fa
+  chr12.fa
+  chr13.fa
+  chr14.fa
+  chr15.fa
+  chr16.fa
+  chr17.fa
+  chr18.fa
+  chr19.fa
+  chr20.fa
+  chr21.fa
+  chr22.fa
+  chrX.fa
+  chrY.fa
+  chrM.fa
+Reading reference sizes
+  Time reading reference sizes: 00:00:21
+Calculating joined length
+Writing header
+Reserving space for joined string
+Joining reference sequences
+  Time to join reference sequences: 00:00:25
+bmax according to bmaxDivN setting: 734413920
+Using parameters --bmax 550810440 --dcv 1024
+  Doing ahead-of-time memory usage test
+  Passed!  Constructing with these parameters: --bmax 550810440 --dcv 1024
+Constructing suffix-array element generator
+Building DifferenceCoverSample
+  Building sPrime
+  Building sPrimeOrder
+  V-Sorting samples
+  V-Sorting samples time: 00:02:20
+  Allocating rank array
+  Ranking v-sort output
+  Ranking v-sort output time: 00:00:55
+  Invoking Larsson-Sadakane on ranks
+  Invoking Larsson-Sadakane on ranks time: 00:00:59
+  Sanity-checking and returning
+Building samples
+Reserving space for 12 sample suffixes
+Generating random suffixes
+QSorting 12 sample offsets, eliminating duplicates
+QSorting sample offsets, eliminating duplicates time: 00:00:00
+Multikey QSorting 12 samples
+  (Using difference cover)
+  Multikey QSorting samples time: 00:00:00
+Calculating bucket sizes
+Splitting and merging
+  Splitting and merging time: 00:00:00
+Avg bucket size: 2.93766e+09 (target: 550810439)
+Converting suffix-array elements to index image
+Allocating ftab, absorbFtab
+Entering Ebwt loop
+Getting block 1 of 1
+  No samples; assembling all-inclusive block
+  Sorting block of length 2937655681 for bucket 1
+  (Using difference cover)
+
+  Sorting block time: 01:38:39
+Returning block of 2937655682 for bucket 1
+Exited Ebwt loop
+fchr[A]: 0
+fchr[C]: 867153993
+fchr[G]: 1466197890
+fchr[T]: 2067713015
+fchr[$]: 2937655681
+Exiting Ebwt::buildToDisk()
+Returning from initFromVector
+Wrote 843536739 bytes to primary EBWT file: ../hg38.bowtie.1.ebwt
+Wrote 367206968 bytes to secondary EBWT file: ../hg38.bowtie.2.ebwt
+Re-opening _in1 and _in2 as input streams
+Returning from Ebwt constructor
+Headers:
+    len: 2937655681
+    bwtLen: 2937655682
+    sz: 734413921
+    bwtSz: 734413921
+    lineRate: 6
+    linesPerSide: 1
+    offRate: 5
+    offMask: 0xffffffe0
+    isaRate: -1
+    isaMask: 0xffffffff
+    ftabChars: 10
+    eftabLen: 20
+    eftabSz: 80
+    ftabLen: 1048577
+    ftabSz: 4194308
+    offsLen: 91801741
+    offsSz: 367206964
+    isaLen: 0
+    isaSz: 0
+    lineSz: 64
+    sideSz: 64
+    sideBwtSz: 56
+    sideBwtLen: 224
+    numSidePairs: 6557268
+    numSides: 13114536
+    numLines: 13114536
+    ebwtTotLen: 839330304
+    ebwtTotSz: 839330304
+    reverse: 0
+Total time for call to driver() for forward index: 02:01:00
+Reading reference sizes
+  Time reading reference sizes: 00:00:15
+Calculating joined length
+Writing header
+Reserving space for joined string
+Joining reference sequences
+  Time to join reference sequences: 00:00:21
+bmax according to bmaxDivN setting: 734413920
+Using parameters --bmax 550810440 --dcv 1024
+  Doing ahead-of-time memory usage test
+  Passed!  Constructing with these parameters: --bmax 550810440 --dcv 1024
+Constructing suffix-array element generator
+Building DifferenceCoverSample
+  Building sPrime
+  Building sPrimeOrder
+  V-Sorting samples
+  V-Sorting samples time: 00:01:50
+  Allocating rank array
+  Ranking v-sort output
+  Ranking v-sort output time: 00:00:33
+  Invoking Larsson-Sadakane on ranks
+  Invoking Larsson-Sadakane on ranks time: 00:00:45
+  Sanity-checking and returning
+Building samples
+Reserving space for 12 sample suffixes
+Generating random suffixes
+QSorting 12 sample offsets, eliminating duplicates
+QSorting sample offsets, eliminating duplicates time: 00:00:00
+Multikey QSorting 12 samples
+  (Using difference cover)
+  Multikey QSorting samples time: 00:00:00
+Calculating bucket sizes
+Splitting and merging
+  Splitting and merging time: 00:00:00
+Avg bucket size: 2.93766e+09 (target: 550810439)
+Converting suffix-array elements to index image
+Allocating ftab, absorbFtab
+Entering Ebwt loop
+Getting block 1 of 1
+  No samples; assembling all-inclusive block
+  Sorting block of length 2937655681 for bucket 1
+  (Using difference cover)
+  Sorting block time: 01:23:57
+Returning block of 2937655682 for bucket 1
+Exited Ebwt loop
+fchr[A]: 0
+fchr[C]: 867153993
+fchr[G]: 1466197890
+fchr[T]: 2067713015
+fchr[$]: 2937655681
+Exiting Ebwt::buildToDisk()
+Returning from initFromVector
+Wrote 843536739 bytes to primary EBWT file: ../hg38.bowtie.rev.1.ebwt
+Wrote 367206968 bytes to secondary EBWT file: ../hg38.bowtie.rev.2.ebwt
+Re-opening _in1 and _in2 as input streams
+Returning from Ebwt constructor
+Headers:
+    len: 2937655681
+    bwtLen: 2937655682
+    sz: 734413921
+    bwtSz: 734413921
+    lineRate: 6
+    linesPerSide: 1
+    offRate: 5
+    offMask: 0xffffffe0
+    isaRate: -1
+    isaMask: 0xffffffff
+    ftabChars: 10
+    eftabLen: 20
+    eftabSz: 80
+    ftabLen: 1048577
+    ftabSz: 4194308
+    offsLen: 91801741
+    offsSz: 367206964
+    isaLen: 0
+    isaSz: 0
+    lineSz: 64
+    sideSz: 64
+    sideBwtSz: 56
+    sideBwtLen: 224
+    numSidePairs: 6557268
+    numSides: 13114536
+    numLines: 13114536
+    ebwtTotLen: 839330304
+    ebwtTotSz: 839330304
+    reverse: 0
+Total time for backward call to driver() for mirror index: 01:44:19

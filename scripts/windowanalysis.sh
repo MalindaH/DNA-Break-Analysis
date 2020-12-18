@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage: ./windowanalysis.sh -t bowtie-output/bowtie-outputA.txt -c bowtie-output/bowtie-outputC.txt -s 48000 -o outputtest1125 -B genome-annotation/GRCh38_unified_blacklist.bed -C genome-annotation/Census_all-Sep17-2020.csv -G genome-annotation/gencode.v34.annotation.gtf -hg bowtie-files/GRCh38
-# Usage: ./windowanalysis.sh --no-control -t bowtie-outputA.txt -s 48000 -o outputtest1125 -B genome-annotation/GRCh38_unified_blacklist.bed -G genome-annotation/gencode.v34.annotation.gtf -C genome-annotation/Census_all-Sep17-2020.csv -hg bowtie-files/GRCh38
+# Usage: ./windowanalysis.sh --no-control -t bowtie-outputA.txt -s 4000 -o outputtest1216 -B genome-annotation/GRCh38_unified_blacklist.bed -G genome-annotation/gencode.v34.annotation.gtf -C genome-annotation/Census_all-Sep17-2020.csv -hg bowtie-files/GRCh38
 
 function show_help() {
     echo -e "Usage: ./windowanalysis.sh [options]\n\n[options] include: (all are mandatory)\t
@@ -130,15 +130,15 @@ function blacklistPrep() {
 # generate files for plotting using MATLAB
 function forMatlab() {
     for((x=1;x<=22;x++)); do
-        awk '{print $2,$6}' output/${1}chr${x}.txt > output/${1}chr${x}_pval.txt
+        awk '{print $2,$6}' temp/chr${x}_pval.txt > output/${1}chr${x}_pval.txt
         # awk '{print $2,$7}' output/${1}chr${x}.txt > output/${1}chr${x}_qval.txt
     done
 
-    awk '{print $2,$6}' output/${1}chrX.txt > output/${1}chrX_pval.txt
+    awk '{print $2,$6}' temp/chrX_pval.txt > output/${1}chrX_pval.txt
     # awk '{print $2,$7}' output/${1}chrX.txt > output/${1}chrX_qval.txt
-    awk '{print $2,$6}' output/${1}chrY.txt > output/${1}chrY_pval.txt
+    awk '{print $2,$6}' temp/chrY_pval.txt > output/${1}chrY_pval.txt
     # awk '{print $2,$7}' output/${1}chrY.txt > output/${1}chrY_qval.txt
-    awk '{print $2,$6}' output/${1}chrM.txt > output/${1}chrM_pval.txt
+    awk '{print $2,$6}' temp/chrM_pval.txt > output/${1}chrM_pval.txt
     # awk '{print $2,$7}' output/${1}chrM.txt > output/${1}chrM_qval.txt
 }
 
@@ -166,18 +166,19 @@ function forGTF() {
 }
 
 function filterpeaks() {
+   
     for((x=1;x<=22;x++)); do
-        awk '$6<=0.05' output0827/${outputname}chr${x}.txt > output/${outputname}chr${x}_peaks.txt
+        awk '$6<=1e-13' temp/chr${x}_pval.txt > temp/${outputname}chr${x}_peaks.txt
     done
 
-    awk '$6<=0.05' output0827/${outputname}chrX.txt > output/${outputname}chrX_peaks.txt
-    awk '$6<=0.05' output0827/${outputname}chrY.txt > output/${outputname}chrY_peaks.txt
-    awk '$6<=0.05' output0827/${outputname}chrM.txt > output/${outputname}chrM_peaks.txt
+    awk '$6<=1e-13' temp/chrX_pval.txt > temp/${outputname}chrX_peaks.txt
+    awk '$6<=1e-13' temp/chrY_pval.txt > temp/${outputname}chrY_peaks.txt
+    awk '$6<=1e-13' temp/chrM_pval.txt > temp/${outputname}chrM_peaks.txt
 }
 
 function ranksensitivegenes() {
-    cat output/chr1_sensitive-genes.txt output/chr2_sensitive-genes.txt output/chr3_sensitive-genes.txt output/chr4_sensitive-genes.txt output/chr5_sensitive-genes.txt output/chr6_sensitive-genes.txt output/chr7_sensitive-genes.txt output/chr8_sensitive-genes.txt output/chr9_sensitive-genes.txt output/chr10_sensitive-genes.txt output/chr11_sensitive-genes.txt output/chr12_sensitive-genes.txt output/chr13_sensitive-genes.txt output/chr14_sensitive-genes.txt output/chr15_sensitive-genes.txt output/chr16_sensitive-genes.txt output/chr17_sensitive-genes.txt output/chr18_sensitive-genes.txt output/chr19_sensitive-genes.txt output/chr20_sensitive-genes.txt output/chr21_sensitive-genes.txt output/chr22_sensitive-genes.txt output/chrX_sensitive-genes.txt > output/allchr_sensitive-genes.txt
-    sort -k 1 -nr output/allchr_sensitive-genes.txt > output/allchr_sensitive-genes-sorted.txt
+    # cat output/chr1_sensitive-genes.txt output/chr2_sensitive-genes.txt output/chr3_sensitive-genes.txt output/chr4_sensitive-genes.txt output/chr5_sensitive-genes.txt output/chr6_sensitive-genes.txt output/chr7_sensitive-genes.txt output/chr8_sensitive-genes.txt output/chr9_sensitive-genes.txt output/chr10_sensitive-genes.txt output/chr11_sensitive-genes.txt output/chr12_sensitive-genes.txt output/chr13_sensitive-genes.txt output/chr14_sensitive-genes.txt output/chr15_sensitive-genes.txt output/chr16_sensitive-genes.txt output/chr17_sensitive-genes.txt output/chr18_sensitive-genes.txt output/chr19_sensitive-genes.txt output/chr20_sensitive-genes.txt output/chr21_sensitive-genes.txt output/chr22_sensitive-genes.txt output/chrX_sensitive-genes.txt > output/allchr_sensitive-genes.txt
+    # sort -k 1 -nr output/allchr_sensitive-genes.txt > output/allchr_sensitive-genes-sorted.txt
 
     cat output/chr1_sensitive-cancer-genes.txt output/chr2_sensitive-cancer-genes.txt output/chr3_sensitive-cancer-genes.txt output/chr4_sensitive-cancer-genes.txt output/chr5_sensitive-cancer-genes.txt output/chr6_sensitive-cancer-genes.txt output/chr7_sensitive-cancer-genes.txt output/chr8_sensitive-cancer-genes.txt output/chr9_sensitive-cancer-genes.txt output/chr10_sensitive-cancer-genes.txt output/chr11_sensitive-cancer-genes.txt output/chr12_sensitive-cancer-genes.txt output/chr13_sensitive-cancer-genes.txt output/chr14_sensitive-cancer-genes.txt output/chr15_sensitive-cancer-genes.txt output/chr16_sensitive-cancer-genes.txt output/chr17_sensitive-cancer-genes.txt output/chr18_sensitive-cancer-genes.txt output/chr19_sensitive-cancer-genes.txt output/chr20_sensitive-cancer-genes.txt output/chr21_sensitive-cancer-genes.txt output/chr22_sensitive-cancer-genes.txt output/chrX_sensitive-cancer-genes.txt > output/allchr_sensitive-cancer-genes.txt
     sort -k 1 -nr output/allchr_sensitive-cancer-genes.txt > output/allchr_sensitive-cancer-genes-sorted.txt
@@ -206,29 +207,34 @@ function debug() {
 if [ ! -r output ]; then
     mkdir output
 fi
-# python windowanalysis.py temp $wsize $outputname blacklist_files
+# python windowanalysis.py temp output $wsize $outputname blacklist_files $no_control
 ## check error code
 
-
+```
 ## generate files for plotting using MATLAB
 # forMatlab $outputname
 
 ## generate peak files
-#filterpeaks
+# filterpeaks
+```
 
-## generate gene annotation files for gene analysis
-#forGTF
+## generate gene annotation files for gene analysis, only need to run once
+# forGTF
 
-# python geneanalysis.py output annotation_files $outputname $annotationfilecancer
+# python geneanalysis.py output annotation_files $outputname $annotationfilecancer temp $no_control
 
-# ranksensitivegenes
+ranksensitivegenes
 
 ## for debugging:
 # debug
+
+
+
+
 
 ## for statistics of DSB sequence bias
 # filterSort_KeepRepetitive temp
 # blacklistPrep
 # python filterblacklist.py temp1 blacklist_files $no_control
 
-python dsbsequence.py temp ${hgfile} output blacklist_files $no_control /DSB-count-1126.csv /DSB-count-hg-1126.csv
+# python dsbsequence.py temp ${hgfile} output blacklist_files $no_control /DSB-count-1126.csv /DSB-count-hg-1126.csv

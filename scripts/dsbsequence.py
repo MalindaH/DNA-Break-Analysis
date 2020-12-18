@@ -85,6 +85,8 @@ def slight_divergent(chrnum):
             outputf.write(prev_line.split()[0]+'\t'+str(prev_line.split()[1])+'\t1\n')
         outputf.close()
 
+# need to run this if hg19.fa contains sequence of all chromosomes, this method separates into each chromosome
+# don't need to run if .fa files come in individual chromosomes
 def generate_hg_files():
     if not os.path.isdir(hg_filepath):
         with open(hg_filepath, 'r') as hgfile:
@@ -106,6 +108,38 @@ def generate_hg_files():
             outputf.close()
             os.remove(temp_folder+'/>chrtemp_hgfile.txt')
         hg_file_generated = True
+
+
+# try to not be limited by 5-base window (ie. window_size = 2) as in generate_chr_sequences()
+# window_size = # bp to count before and after the break
+def generate_chr_sequences2(chrnum, window_size):
+    if hg_file_generated:
+        hg_file_individual = temp_folder+'/>chr'+str(chrnum)+'_hgfile.txt'
+    else:
+        hg_file_individual = hg_filepath+'/chr'+str(chrnum)+'.fa'
+    with open(hg_file_individual, 'r') as hgfile:
+        line = hgfile.readline().replace('\n', '')
+        genome = hgfile.read().replace('\n', '')
+        if not line.startswith('>chr'):
+            line += genome
+            genome = line
+        with open(temp_folder+"/chr"+str(chrnum)+"_comparedhits_repeats_combined.txt", 'r') as hitsfile:
+            indexes = range(-window_size, window_size+1)
+            out = pd.DataFrame(0, index=indexes, columns=['A', 'T', 'C', 'G'])
+            for lineh in hitsfile:
+                # pr1 is at position 0
+                pr0 = int(lineh.split()[1]) - 1
+                sequence = genome[pr0-window_size : pr0+window_size+1]
+                add_count2(sequence.upper(), out, indexes)
+    return out
+
+# helper method for generate_chr_sequences2()
+def add_count2(bases, df, indexes):
+    if bases.find('N') != -1: # if bases sequence contains N
+        return df
+    for i in indexes:
+        df.at[i, bases[i]] += 1
+    return df       
 
 
 # output 4x5 array (dataframe): out[0,:] is count of 4 bases (A,T,C,G) for position -2
@@ -165,6 +199,7 @@ def generate_chr_sequences(chrnum):
     return out
 
 
+# helper method for generate_chr_sequences()
 def add_count(fivebases, df):
     if fivebases.find('N') != -1:
         return df

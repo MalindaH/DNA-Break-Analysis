@@ -34,7 +34,24 @@ bowtie -q bowtie-files/hg19.bowtie -v 0 -M 1 --best DSB-quantification/control.f
 `-q` means input file is in .fastq format, `-v 0` allows 0 mismatch, `-M 1 --best` reports the best read if a read has more than 1 reportable alignments
 
 ### Step 2: Filter alignments and analyze alignment
-Usage: `./windowanalysis.sh <bowtie-output-treated> <bowtie-output-control> <window-size> <output-filename> <blacklist-file>`
+```
+Usage: ./windowanalysis.sh [options]
+
+[options] include:
+        -t|--treated <bowtie-output-treated> bowtie output file of treated sample
+        -c|--control <bowtie-output-control> bowtie output file of control sample
+            (provide this or enter --no-control)
+        --no-control
+        -s|--size <window-size> user-defined window size of peak calling
+            (if not provided, find and use window size with highest variance of p-values)
+        -o|--output <output-filename>
+        -B <blacklist-file>
+        -C <cancer-gene-consensus.csv-annotation-file>
+        -hg <human-reference-genome-file>
+        -G <gencode.gtf-annotation-file>
+            (this function is not implemented yet)
+```
+Example: `./windowanalysis.sh --no-control -t bowtie-outputA.txt -s 5000 -o outputtest -B ../genome-annotation/GRCh38_unified_blacklist.bed -G ../genome-annotation/gencode.v34.annotation.gtf -C ../genome-annotation/Census_all-Sep17-2020.csv -hg ../bowtie-files/GRCh38`
 
 Detailed steps in `windowanalysis.sh`:
 1. Filter bowtie outputs: keep alignments of length >= 23 nt, with no mismatch, and filter repetitive reads; delete alignments in blacklisted regions using `filterblacklist.py`

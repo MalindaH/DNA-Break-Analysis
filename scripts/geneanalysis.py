@@ -3,7 +3,6 @@ import os
 import csv
 import numpy as np
 from scipy.stats import hypergeom
-from scipy.stats import poisson
 import math
 
 # align to genes from processed gtf file (gencode.v34.annotation.gtf)
@@ -281,7 +280,10 @@ def calc_pval(chrnum):
         os.remove(temp_folder+"/outputtpy.txt")
 
 
-def poisson_pval(t, mu): # p-value = 1 - cdf(t, mu), this function avoids precision error from floating point number
+# here p-value is not used for plotting / determining sensitive genes
+# private method used in calc_pval()
+# P(X > t); p-value = 1 - cdf(t, mu), this function avoids precision error from floating point number
+def poisson_pval(t, mu):
   result = 0.0
   for k in range(math.floor(t+1), 50):
     result = result + math.exp(-mu)*((mu)**k)/math.factorial(k)
@@ -290,7 +292,7 @@ def poisson_pval(t, mu): # p-value = 1 - cdf(t, mu), this function avoids precis
 
 
 #print("Usage: python geneanalysis.py output annotation_files outputtest0827 ../genome-annotation/Census_all-Sep17-2020.csv temp $no_control")
-print("Analyzing sensitive genes......")
+print("\n-> Analyzing sensitive genes......")
 output_folder = sys.argv[1]
 anno_folder = sys.argv[2]
 output_name = sys.argv[3]
@@ -331,3 +333,4 @@ while x <= 22:
     x += 1
 alignto_cancer_genes("X") # only chrX has cancer genes in cancer file
 calc_pval("X")
+

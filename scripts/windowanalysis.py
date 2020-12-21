@@ -3,8 +3,34 @@ import os
 import numpy as np
 import pandas as pd
 from scipy.stats import hypergeom
-from scipy.stats import poisson
+from collections import defaultdict
 import math
+
+
+# update_progress() : Displays or updates a console progress bar
+## Accepts a float between 0 and 1. Any int will be converted to a float.
+## A value under 0 represents a 'halt'.
+## A value at 1 or bigger represents 100%
+def update_progress(progress, chrnum):
+    barLength = 10 # Modify this to change the length of the progress bar
+    status = ""
+    if isinstance(progress, int):
+        progress = float(progress) 
+    if not isinstance(progress, float):
+        progress = 0
+        status = "error: progress var must be float\r\n"
+    if progress < 0:
+        progress = 0
+        status = "Halt...\r\n"
+    if progress >= 1:
+        progress = 1
+        status = "All done!                                  \r\n"
+    if progress >= 0 and progress < 1:
+        status = "processing chromosome "+str(chrnum)+"..."
+    block = int(round(barLength*progress))
+    text = "\r  [{}] {:3.2f}% {}".format( "#"*block + "-"*(barLength-block), progress*100, status)
+    sys.stdout.write(text)
+    sys.stdout.flush()
 
 
 def move_window(chrnum, window_size):
@@ -110,7 +136,7 @@ def move_window(chrnum, window_size):
   
 # with control: hypergeometric p-value
 # without control: poisson p-value
-def calc_pval(chrnum, window_size):
+def calc_pval(chrnum, window_size, output_folder):
   if no_control == '0': # with control:
     # N = total number in population = number of reads in the given chromosome for
     # both treated and non-treated samples
@@ -172,7 +198,7 @@ def calc_pval(chrnum, window_size):
         mu_window3 = x3/(x3_window_size)
         mu_window11 = x11/(x11_window_size)
         # mu = expected number of reads in the window = max(mu_window1, mu_window3, mu_window11, mu_chr)
-        mu = max(mu_window1, mu_window3, mu_window11, mu_chr)
+        mu = max(mu_window1, mu_window3, mu_window11, mu_chr)/mu_chr
         # print('mu: ',mu_window1, mu_window3, mu_window11, mu_chr)
         p_val = poisson_pval(x-1, mu) # upper tail, P(X >= x)
         # p_val = poisson.pmf(math.floor(mean_hits), mu)
@@ -181,29 +207,84 @@ def calc_pval(chrnum, window_size):
     os.remove(temp_folder+"/outputtpy.txt")
 
 
-def poisson_pval(t, mu): # P(X > t); p-value = 1 - cdf(t, mu), this function avoids precision error from floating point number
+# private method used in calc_pval()
+# P(X > t); p-value = 1 - cdf(t, mu), this function avoids precision error from floating point number
+def poisson_pval(t, mu): 
   result = 0.0
   for k in range(t+1, 50):
     result = result + math.exp(-mu)*((mu)**k)/math.factorial(k)
   return result
 
 
-# to find an appropriate window size
+# to find an appropriate window size: maximize variance of p-values
 def find_window_size():
-  sizes = [10, 20, 40, 60, 80, 100, 200, 500, 700, 1000, 2500, 5000, 7500, 10000, 25000, 50000, 75000, 100000, 500000]
-  
-  indexes = np.array(xs).astype('str')
-  out = pd.DataFrame(0, index=indexes, columns=['A', 'T', 'C', 'G'])
+  print("testing for best window size...")
+  # takes longer for smaller window sizes
+  sizes = [500, 750, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+  # sizes = [500, 750, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 25000, 50000, 75000, 100000]
+
+  df = pd.DataFrame(0.0, index=sizes, columns=['pval_variance', 'pval_numzeros'])
 
   for size in sizes:
+    print('trying window size: ',size,'bp...')
+    i = 0
     for x in xs:
+      update_progress(i/25, x)
       move_window(x, size)
-      calc_pval(x, size)
+      calc_pval(x, size, temp_folder)
+      i += 1
+    print("done")
+    update_progress(10, -2)
 
+    # collect variance and sum from output files
+    find_var_sum(size, df, temp_folder) 
+
+    # delete output files
+    for x in xs:
+      os.remove(temp_folder+'/chr'+str(x)+'_pval.txt')
+
+  print(df)  
+  window_size = df['pval_variance'].idxmax()
+  print('Window size with highest variance of p-values is',window_size,'bp, use this size to analyze sensitive windows...')
+  i = 0
+  for x in xs:
+    update_progress(i/25, x)
+    move_window(x, window_size)
+    calc_pval(x, window_size, output_folder)
+    i += 1
+  update_progress(10, -2)
+
+
+# private method to be used in find_window_size()
+def find_var_sum(size, df, output_folder):
+    # collect variance and sum from output files
+    zerosum = 0
+    pvariance = []
+    for x in xs:
+      columns = defaultdict(list)
+      fp = open(output_folder+'/chr'+str(x)+'_pval.txt', 'r')
+      for line in fp:
+          for (i,v) in enumerate(line.replace('\n','').split(sep='\t')):
+              columns[i].append(v)
+      
+      pvals = np.array(columns[5], dtype=np.float32)
+      pvariance.append(np.var(pvals))
+
+      counter = 0
+      for pval in columns[5]:
+        if pval == '0.0': # need to use string here because floating point bad precision
+          counter += 1
+      zerosum += counter
+    
+    df.at[size, 'pval_variance'] = sum(pvariance)/len(pvariance)
+    df.at[size, 'pval_numzeros'] = zerosum
+    
+    print('average variance of p-values: ',sum(pvariance)/len(pvariance))
+    # print('sum: ',zerosum) 
 
 
 #print("Usage: python windowanalysis.py temp output 10000 outputtest0825 blacklist_files $no_control")
-print("Analyzing sensitive windows......")
+print("\n-> Analyzing sensitive windows......")
 # main program:
 temp_folder = sys.argv[1]
 output_folder = sys.argv[2]
@@ -218,26 +299,19 @@ xs.append('X')
 xs.append('Y')
 xs.append('M')
 
-for x in xs:
-  move_window(x, window_size)
-  calc_pval(x, window_size)
+if window_size == -1:
+  find_window_size()
+elif window_size > 0:
+  i = 0
+  for x in xs:
+    update_progress(i/25, x)
+    move_window(x, window_size)
+    calc_pval(x, window_size, output_folder)
+    i += 1
+  update_progress(10, -2)
 
-
-# # <- to find an appropriate window size -> ##
-# sizes = [10, 20, 40, 60, 80, 100, 200, 500, 700, 1000, 2500, 5000, 7500, 10000, 25000, 50000, 75000, 100000, 500000]
- 
-# indexes = np.array(xs).astype('str')
-# out = pd.DataFrame(0, index=indexes, columns=['A', 'T', 'C', 'G'])
-
-# for size in sizes:
-#   for x in xs:
-#     move_window(x, size)
-#     calc_pval(x, size)
-
-  
-
-#   for x in xs:
-#     os.remove(output_folder+'/chr'+str(x)+'_pval.txt')
+  df = pd.DataFrame(0.0, columns=['pval_variance', 'pval_numzeros'])
+  find_var_sum(window_size, df, output_folder)
 
 
 

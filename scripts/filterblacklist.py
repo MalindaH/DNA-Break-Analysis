@@ -15,7 +15,7 @@ def remove_blacklist(chrnum, kind):
                 for linef in f:
                     position = int(linef.split()[4])
                     if position < start:
-                        if linef.split()[5] not in "TTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGG" and linef.split()[5] not in "CCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA" and "TTAGGGTTAGGG" not in linef.split()[5] and "CCCTAACCCTAA" not in linef.split()[5]: # filter out telomere sequences
+                        if linef.split()[5] not in "TTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGG" and linef.split()[5] not in "CCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA" and "TTAGGGTTAGGGTTAGGG" not in linef.split()[5] and "CCCTAACCCTAACCCTAA" not in linef.split()[5]: # filter out telomere sequences
                             outputf.write(linef)
                         f_pos += len(linef)
                     elif position >= start and position <= end:
@@ -28,7 +28,7 @@ def remove_blacklist(chrnum, kind):
                         break
             # print remaining lines
             for linef in f:
-                if "TTAGGGTTAGGG" not in linef.split()[5]  and "CCCTAACCCTAA" not in linef.split()[5] and linef.split()[5] not in "TTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGG" and linef.split()[5] not in "CCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA": # filter out telomere sequences
+                if "TTAGGGTTAGGGTTAGGG" not in linef.split()[5]  and "CCCTAACCCTAACCCTAA" not in linef.split()[5] and linef.split()[5] not in "TTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGG" and linef.split()[5] not in "CCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAA": # filter out telomere sequences
                     outputf.write(linef)
             outputf.close()
             #print("deleted "+str(counter)+" lines")
@@ -37,7 +37,7 @@ def remove_blacklist(chrnum, kind):
 
 
 #print("Usage: python filterblacklist.py temp blacklist_files $no_control")
-print("Removing blacklisted alignments......")
+print("\n-> Removing blacklisted alignments......")
 chr_folder = sys.argv[1]
 bl_folder = sys.argv[2]
 no_control = sys.argv[3]

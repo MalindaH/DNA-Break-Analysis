@@ -244,7 +244,7 @@ def count_hg(output_csv_hg):
 
 #print("Usage: python dsbsequence.py temp ../bowtie-files/hg19.fa output blacklist_files $no_control DSB-count-1126 2")
 #print("Usage: python dsbsequence.py temp bowtie-files/GRCh38 output blacklist_files $no_control DSB-count-1126 10")
-print("Analyzing break sequence bias......")
+print("\n-> Analyzing break sequence bias......")
 temp_folder = sys.argv[1]
 hg_filepath = sys.argv[2]
 output_folder = sys.argv[3]

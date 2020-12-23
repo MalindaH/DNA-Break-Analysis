@@ -5,6 +5,30 @@ import numpy as np
 from scipy.stats import hypergeom
 import math
 
+
+# Displays or updates a console progress bar: <0 = 'halt'; >=1 = 100%
+def update_progress(progress, chrnum):
+    barLength = 10 # Modify this to change the length of the progress bar
+    status = ""
+    if isinstance(progress, int):
+        progress = float(progress) 
+    if not isinstance(progress, float):
+        progress = 0
+        status = "error: progress var must be float\r\n"
+    if progress < 0:
+        progress = 0
+        status = "Halt...\r\n"
+    if progress >= 1:
+        progress = 1
+        status = "Done!                                      \r\n"
+    if progress >= 0 and progress < 1:
+        status = "processing chromosome "+str(chrnum)+"..."
+    block = int(round(barLength*progress))
+    text = "\r  [{}] {:3.2f}% {}".format( "#"*block + "-"*(barLength-block), progress*100, status)
+    sys.stdout.write(text)
+    sys.stdout.flush()
+
+
 # align to genes from processed gtf file (gencode.v34.annotation.gtf)
 def alignto_genes(chrnum):
     with open(anno_folder+"/chr"+str(chrnum)+"_annotation-genes.gtf", "r") as genes:
@@ -297,9 +321,7 @@ output_folder = sys.argv[1]
 anno_folder = sys.argv[2]
 output_name = sys.argv[3]
 anno_cancer_file = sys.argv[4]
-# window_size = sys.argv[5]
 temp_folder = sys.argv[5]
-# bl_folder = sys.argv[6]
 no_control = sys.argv[6]
 
 # x = 1
@@ -320,17 +342,20 @@ no_control = sys.argv[6]
 # edit_output("Y")
 # edit_output("M")
 
-# only need to run once
-# process_cancer_genes()
 
-# alignto_cancer_genes(1)
-# calc_pval(1)
 
-x = 1
-while x <= 22:
+
+
+# only need to run this method once
+process_cancer_genes()
+
+xs = list(range(1,23))
+xs.append('X') # only chrX has cancer genes in cancer file
+
+i=0
+for x in xs:
+    update_progress(i/23, x)
     alignto_cancer_genes(x)
     calc_pval(x)
-    x += 1
-alignto_cancer_genes("X") # only chrX has cancer genes in cancer file
-calc_pval("X")
-
+    i += 1
+update_progress(1, 0)

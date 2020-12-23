@@ -1,16 +1,15 @@
 import sys
 import os
+import math
 import numpy as np
 import pandas as pd
 from scipy.stats import hypergeom
 from collections import defaultdict
-import math
+from decimal import *
 
 
-# update_progress() : Displays or updates a console progress bar
-## Accepts a float between 0 and 1. Any int will be converted to a float.
-## A value under 0 represents a 'halt'.
-## A value at 1 or bigger represents 100%
+
+# Displays or updates a console progress bar: <0 = 'halt'; >=1 = 100%
 def update_progress(progress, chrnum):
     barLength = 10 # Modify this to change the length of the progress bar
     status = ""
@@ -24,7 +23,7 @@ def update_progress(progress, chrnum):
         status = "Halt...\r\n"
     if progress >= 1:
         progress = 1
-        status = "All done!                                  \r\n"
+        status = "Done!                                      \r\n"
     if progress >= 0 and progress < 1:
         status = "processing chromosome "+str(chrnum)+"..."
     block = int(round(barLength*progress))
@@ -184,11 +183,16 @@ def calc_pval(chrnum, window_size, output_folder):
         x = int(linet.split()[3])
         x3 = 0
         x3_window_size = 0
+        x5 = 0
+        x5_window_size = 0
         x11 = 0
         x11_window_size = 0
         for i in range(max(0, index-1), min(index+2, num_windows)):
             x3 += int(lines[i].split()[3])
             x3_window_size += window_size
+        for i in range(max(0, index-2), min(index+3, num_windows)):
+            x5 += int(lines[i].split()[3])
+            x5_window_size += window_size
         for i in range(max(0, index-5), min(index+6, num_windows)):
             x11 += int(lines[i].split()[3])
             x11_window_size += window_size
@@ -196,10 +200,17 @@ def calc_pval(chrnum, window_size, output_folder):
  
         mu_window1 = x/window_size
         mu_window3 = x3/(x3_window_size)
+        mu_window5 = x5/(x5_window_size)
         mu_window11 = x11/(x11_window_size)
-        # mu = expected number of reads in the window = max(mu_window1, mu_window3, mu_window11, mu_chr)
-        mu = max(mu_window1, mu_window3, mu_window11, mu_chr)/mu_chr
-        # print('mu: ',mu_window1, mu_window3, mu_window11, mu_chr)
+        mu = mu_chr
+        # topological domain average = 25kb
+        if window_size <= 1000:
+          # mu = expected number of reads in the window = max(mu_window1, mu_window3, mu_window5, mu_window11, mu_chr)
+          mu = max(mu_window1, mu_window3, mu_window5, mu_window11, mu_chr)/mu_chr
+        elif window_size <= 5000: 
+          mu = max(mu_window1, mu_window3, mu_window5, mu_chr)/mu_chr
+        elif window_size > 5000:
+          mu = max(mu_window1, mu_window3, mu_chr)/mu_chr
         p_val = poisson_pval(x-1, mu) # upper tail, P(X >= x)
         # p_val = poisson.pmf(math.floor(mean_hits), mu)
         # print(p_val)
@@ -210,31 +221,35 @@ def calc_pval(chrnum, window_size, output_folder):
 # private method used in calc_pval()
 # P(X > t); p-value = 1 - cdf(t, mu), this function avoids precision error from floating point number
 def poisson_pval(t, mu): 
-  result = 0.0
-  for k in range(t+1, 50):
-    result = result + math.exp(-mu)*((mu)**k)/math.factorial(k)
-  return result
+  result = Decimal(0.0)
+  a = Decimal(mu)
+  for k in range(t+1, t+50):
+    b = Decimal(k)
+    result = result + ((-a).exp())*((a)**b)/math.factorial(int(b))
+    # result = result + math.exp(-mu)*((mu)**k)/math.factorial(k)
+  return float(result)
 
 
 # to find an appropriate window size: maximize variance of p-values
 def find_window_size():
-  print("testing for best window size...")
-  # takes longer for smaller window sizes
-  sizes = [500, 750, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
-  # sizes = [500, 750, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 25000, 50000, 75000, 100000]
+  print("Finding best window size...")
+  # takes longer for smaller window sizes; more than 30000bp is too sparse
+  sizes = [1000, 2000, 4000, 6000, 8000, 10000, 15000, 20000, 25000, 30000]
+  # sizes = [500, 750, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 25000, 50000]
 
   df = pd.DataFrame(0.0, index=sizes, columns=['pval_variance', 'pval_numzeros'])
 
+  window_size = -1
+
   for size in sizes:
-    print('trying window size: ',size,'bp...')
+    print('Trying window size: ',size,'bp...')
     i = 0
     for x in xs:
       update_progress(i/25, x)
       move_window(x, size)
       calc_pval(x, size, temp_folder)
       i += 1
-    print("done")
-    update_progress(10, -2)
+    update_progress(1, 0)
 
     # collect variance and sum from output files
     find_var_sum(size, df, temp_folder) 
@@ -243,8 +258,13 @@ def find_window_size():
     for x in xs:
       os.remove(temp_folder+'/chr'+str(x)+'_pval.txt')
 
+    if df.at[size,'pval_variance'] < df.at[sizes[sizes.index(size)-1],'pval_variance']: # max variance is at sizes[sizes.index(size)-1]
+      window_size = sizes[sizes.index(size)-1]
+      break
+
   print(df)  
-  window_size = df['pval_variance'].idxmax()
+  if window_size == -1:
+    window_size = df['pval_variance'].idxmax()
   print('Window size with highest variance of p-values is',window_size,'bp, use this size to analyze sensitive windows...')
   i = 0
   for x in xs:
@@ -299,9 +319,9 @@ xs.append('X')
 xs.append('Y')
 xs.append('M')
 
-if window_size == -1:
+if window_size == -1: # no window size provided
   find_window_size()
-elif window_size > 0:
+elif window_size > 0: # window size provided
   i = 0
   for x in xs:
     update_progress(i/25, x)
@@ -310,7 +330,7 @@ elif window_size > 0:
     i += 1
   update_progress(10, -2)
 
-  df = pd.DataFrame(0.0, columns=['pval_variance', 'pval_numzeros'])
+  df = pd.DataFrame(0.0, index = range(1), columns=['pval_variance', 'pval_numzeros'])
   find_var_sum(window_size, df, output_folder)
 
 

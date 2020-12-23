@@ -10,6 +10,30 @@ xs.append('X')
 xs.append('Y')
 xs.append('M')
 
+
+# Displays or updates a console progress bar: <0 = 'halt'; >=1 = 100%
+def update_progress(progress, chrnum):
+    barLength = 10 # Modify this to change the length of the progress bar
+    status = ""
+    if isinstance(progress, int):
+        progress = float(progress) 
+    if not isinstance(progress, float):
+        progress = 0
+        status = "error: progress var must be float\r\n"
+    if progress < 0:
+        progress = 0
+        status = "Halt...\r\n"
+    if progress >= 1:
+        progress = 1
+        status = "Done!                                     \r\n"
+    if progress >= 0 and progress < 1:
+        status = "processing chromosome "+str(chrnum)+"..."
+    block = int(round(barLength*progress))
+    text = "\r  [{}] {:3.2f}% {}".format( "#"*block + "-"*(barLength-block), progress*100, status)
+    sys.stdout.write(text)
+    sys.stdout.flush()
+
+
 def compare_tc(chrnum):
     # delete sequences slightly divergent owing to sequencing errors
     if no_control == '0':
@@ -157,15 +181,21 @@ def add_count2(bases, df, indexes):
 
 
 def count_sample(output_csv, window_size):
+    print('Generating counts: sample...')
+    update_progress(0, 1)
     df = generate_chr_sequences2(1, window_size)
+    i = 1
     for x in xs:
+        update_progress(i/25, x)
         if x == 1:
             df.to_csv(path_or_buf=output_csv+'-chr1.csv', mode='a')
         else:
             df_temp = generate_chr_sequences2(x, window_size)
             df_temp.to_csv(path_or_buf=output_csv+'-chr'+str(x)+'.csv', mode='a')
             df = df.add(df_temp)
-    print(df)
+        i += 1
+    update_progress(i/25, 0)
+    # print(df)
     df.to_csv(path_or_buf=output_csv+'-chrAll.csv', mode='a')
     return df
 
@@ -224,19 +254,25 @@ def count_ref_chr2(chrnum):
 
 
 def count_hg(output_csv_hg):
+    print('Generating counts: human reference genome...')
+    update_progress(0, 1)
     df = count_ref_chr2(1)
+    i = 1
     for x in xs:
+        update_progress(i/25, x)
         if x == 1:
-            print('chr'+str(x))
-            print(df)
+            # print('chr'+str(x))
+            # print(df)
             df.to_csv(path_or_buf=output_csv_hg, mode='a+')
         else:
-            print('chr'+str(x))
+            # print('chr'+str(x))
             df_temp = count_ref_chr2(x)
             df_temp.to_csv(path_or_buf=output_csv_hg, mode='a')
             df = df.add(df_temp)
-            print(df)
-    print(df)
+            # print(df_temp)
+        i += 1
+    update_progress(i/25, 0)
+    # print(df)
     df.to_csv(path_or_buf=output_csv_hg, mode='a')
     return df
 
@@ -256,15 +292,20 @@ output_csv_hg = output_folder+'/'+sys.argv[6]+'-hg.csv'
 window_size = int(sys.argv[7])
 
 
-# for x in xs:
-#     compare_tc(x)
+i = 0
+for x in xs:
+    update_progress(i/25, x)
+    compare_tc(x)
+    i += 1
+update_progress(1, 0)
 
-# print('......generating counts......')
+
 df = count_sample(output_csv, window_size)
 
-# only need to do this step once (not needed for GRCh38)
+# this step is not needed for GRCh38
 # generate_hg_files()
 
+# only need to run this step once for human reference genome GRCh38
 df_hg = count_hg(output_csv_hg)
 
 for x in xs:

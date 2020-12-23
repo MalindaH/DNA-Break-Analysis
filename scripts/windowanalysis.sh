@@ -42,7 +42,7 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-echo "Inputs:"
+echo -e "\nInputs:"
 echo " -- treated (bowtie output): $treated"
 if [ $no_control ]; then
     echo " -- no control"
@@ -64,7 +64,7 @@ echo " -- human reference genome file or folder (.fa): $hgfile"
 
 # filter and sort bowtie output (keep repetitive reads)
 function filterSort_KeepRepetitive() {
-    echo -e "Filtering and sorting alignments by chromosomes (keep repetitive reads)......"
+    echo -e "\n-> Filtering and sorting alignments by chromosomes (keep repetitive reads)......"
     if [ ! -r ${1} ]; then
         mkdir ${1}
     fi
@@ -158,25 +158,18 @@ fi
 ## --- for statistics of sequence bias --- ##
 # python dsbsequence.py temp ${hgfile} output blacklist_files $no_control DSB-count-1218 10
 
+if [ ! -r annotation_files ]; then
+    mkdir annotation_files
+fi
+
+## --- Calculate p values for window of cencer genes --- ##
+# python geneanalysis.py output annotation_files $outputname $annotationfilecancer temp $no_control
+# ranksensitivegenes
 
 
 ## --- Calculate p (and q) values for window of user-defined size --- ##
 python windowanalysis.py temp output $wsize $outputname blacklist_files $no_control
 
-```
-## generate files for plotting using MATLAB
-# forMatlab $outputname
-
-## generate peak files (p-value < threshold)
-# filterpeaks
-```
-
-## generate gene annotation files for gene analysis, only need to run once (for gene and genetic region analysis, not needed for cancer gene analysis)
-# forGTF
-
-## --- Calculate p values for window of cencer genes --- ##
-# python geneanalysis.py output annotation_files $outputname $annotationfilecancer temp $no_control
-# ranksensitivegenes
 
 
 echo "Done :)"

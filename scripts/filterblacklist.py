@@ -2,6 +2,29 @@ import sys
 import os
 
 
+# Displays or updates a console progress bar: <0 = 'halt'; >=1 = 100%
+def update_progress(progress, chrnum):
+    barLength = 10 # Modify this to change the length of the progress bar
+    status = ""
+    if isinstance(progress, int):
+        progress = float(progress) 
+    if not isinstance(progress, float):
+        progress = 0
+        status = "error: progress var must be float\r\n"
+    if progress < 0:
+        progress = 0
+        status = "Halt...\r\n"
+    if progress >= 1:
+        progress = 1
+        status = "Done!                                      \r\n"
+    if progress >= 0 and progress < 1:
+        status = "processing chromosome "+str(chrnum)+"..."
+    block = int(round(barLength*progress))
+    text = "\r  [{}] {:3.2f}% {}".format( "#"*block + "-"*(barLength-block), progress*100, status)
+    sys.stdout.write(text)
+    sys.stdout.flush()
+
+
 def remove_blacklist(chrnum, kind):
     with open(bl_folder+"/chr"+str(chrnum)+"_blacklist.txt", "r") as bl:
         with open(chr_folder+"/chr"+str(chrnum)+kind+"_hitssorted.txt", "r") as f:  
@@ -42,24 +65,21 @@ chr_folder = sys.argv[1]
 bl_folder = sys.argv[2]
 no_control = sys.argv[3]
 
-x = 1
-while x <= 22:
+
+xs = list(range(1,23))
+xs.append('X')
+xs.append('Y')
+xs.append('M')
+
+i = 0
+for x in xs:
+    update_progress(i/25, x)
     remove_blacklist(x, "t")
     if no_control == '0':
         remove_blacklist(x, "c")
-    x+=1
+    i += 1
+update_progress(1, 0)
     
-remove_blacklist('X', "t")
-if no_control == '0':
-    remove_blacklist('X', "c")
-remove_blacklist('Y', "t")
-if no_control == '0':
-    remove_blacklist('Y', "c")
-remove_blacklist('M', "t")
-if no_control == '0':
-    remove_blacklist('M', "c")
-
-
 
 
 

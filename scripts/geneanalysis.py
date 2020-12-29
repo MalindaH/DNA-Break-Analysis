@@ -3,6 +3,7 @@ import os
 import csv
 import numpy as np
 from scipy.stats import hypergeom
+from decimal import *
 import math
 
 
@@ -307,15 +308,153 @@ def calc_pval(chrnum):
 # here p-value is not used for plotting / determining sensitive genes
 # private method used in calc_pval()
 # P(X > t); p-value = 1 - cdf(t, mu), this function avoids precision error from floating point number
-def poisson_pval(t, mu):
-  result = 0.0
-  for k in range(math.floor(t+1), 50):
-    result = result + math.exp(-mu)*((mu)**k)/math.factorial(k)
-  return result
+def poisson_pval(t, mu): 
+  result = Decimal(0.0)
+  a = Decimal(mu)
+  for k in range(math.floor(t+1), math.floor(t+1)):
+    b = Decimal(k)
+    result = result + ((-a).exp())*((a)**b)/math.factorial(int(b))
+    # result = result + math.exp(-mu)*((mu)**k)/math.factorial(k)
+  return float(result)
+
+
+def process_refgene(xs):
+    for x in xs:
+        with open(anno_refgene, "r") as csv_file:
+            outputf = open(anno_folder+"/chr"+str(x)+"_refgene.txt", "a+")
+            csv_reader = csv.reader(csv_file, delimiter='\t')
+            for row in csv_reader:
+                if row[2] == 'chr'+str(x): # or row[2].startswith('chr'+str(x)+'_'):
+                    outputf.write(row[1]+'\t'+row[2]+'\t'+row[3]+'\t'+row[4]+'\t'+row[5]+'\t'+row[6]+'\t'+row[7]+'\t'+row[8]+'\n')
+            outputf.close()
+            lines = open(anno_folder+"/chr"+str(x)+"_refgene.txt", 'r').readlines()
+            outputf2 = open(anno_folder+"/chr"+str(x)+"_refgene_sorted.txt", "a+")
+            for line in sorted(lines, key=lambda line: int(line.split()[3])):
+                outputf2.write(line)
+            outputf2.close()
+            os.remove(anno_folder+"/chr"+str(x)+"_refgene.txt")       
+
+
+def alignto_refgene(chrnum):
+    with open(anno_folder+"/chr"+str(chrnum)+"_refgene_sorted.txt", "r") as refg:
+        outputf = open(output_folder+"/chr"+str(chrnum)+"_refgene_counts.txt", "a+")
+        # name, chr, direction, TSS, TTS, windows 1-20, windows 21-180, windows 181-200 (1-20 before TSS, 181-200 after TTS)
+        win_size1 = 250
+        TSS_prev = 0
+        TTS_prev = 0
+        linef_pos = 0
+        for liner in refg:
+            if liner.split()[2]=='+':
+                TSS = int(liner.split()[3])
+                TTS = int(liner.split()[4])
+                if TSS == TSS_prev and TTS == TTS_prev:
+                    TSS_prev = TSS
+                    TTS_prev = TTS
+                    continue
+                TSS_prev = TSS
+                TTS_prev = TTS
+                outputf.write(liner.split()[0]+'\t'+liner.split()[1]+'\t'+liner.split()[2]+'\t'+str(TSS)+'\t'+str(TTS))
+                win_size2 = abs(TTS-TSS)/160
+                start = max(TSS - 5000, 1)
+                end = start + win_size1
+                temp = ''
+                wrote1 = 0
+                wrote2 = 0
+                linef_pos_updated = 0
+
+                while start < TTS + 5000:
+                    f = open(temp_folder+"/chr"+str(chrnum)+"t_hitsfiltered.txt", "r")
+                    f.seek(linef_pos)
+                    count = 0.0
+                    for line in f:
+                        position = int(line.split()[4])
+                        if position <= start and not linef_pos_updated:
+                            linef_pos += len(line)
+                        elif position <= end and position > start:
+                            count += 1
+                            linef_pos_updated = 1
+                        elif position > end:
+                            # outputf.write('\t'+str(count/(end-start)))
+                            temp += str(count/(end-start))+','
+                            break
+                    f.close()
+
+                    start = end + 1
+                    if start < TSS:
+                        end = start + win_size1
+                    elif start >= TSS and start < TTS:
+                        end = start + win_size2
+                        if not wrote1:
+                            wrote1 = 1
+                            outputf.write('\t'+temp)
+                            temp = ''
+                    elif start >= TTS:
+                        end = start + win_size1
+                        if not wrote2:
+                            wrote2 = 1
+                            outputf.write('\t'+temp)
+                            temp = ''
+                outputf.write('\t'+temp+'\n')
+            else: # direction is '-'
+                TSS = int(liner.split()[4])
+                TTS = int(liner.split()[3])
+                if TSS == TSS_prev and TTS == TTS_prev:
+                    TSS_prev = TSS
+                    TTS_prev = TTS
+                    continue
+                TSS_prev = TSS
+                TTS_prev = TTS
+                outputf.write(liner.split()[0]+'\t'+liner.split()[1]+'\t'+liner.split()[2]+'\t'+str(TSS)+'\t'+str(TTS))
+                win_size2 = (TSS-TTS)/160
+                start = TSS + 5000
+                end = start - win_size1
+                temp = ''
+                wrote1 = 0
+                wrote2 = 0
+                linef_pos_updated = 0
+
+                while end > TTS - 5000:
+                    f = open(temp_folder+"/chr"+str(chrnum)+"t_hitsfiltered.txt", "r")
+                    f.seek(linef_pos)
+                    count = 0.0
+                    for line in f:
+                        position = int(line.split()[4])
+                        if position <= end and not linef_pos_updated:
+                            linef_pos += len(line)
+                        if position <= start and position > end:
+                            count += 1
+                            linef_pos_updated = 1
+                        elif position > start:
+                            # outputf.write('\t'+str(count/(start-end)))
+                            temp += str(count/(start-end))+','
+                            break
+                    f.close()
+
+                    start = end - 1
+                    if start >= TSS:
+                        end = start - win_size1
+                    elif start >= TTS and start < TSS:
+                        end = start - win_size2
+                        if not wrote1:
+                            wrote1 = 1
+                            outputf.write('\t'+temp)
+                            temp = ''
+                    elif start < TTS:
+                        end = start - win_size1
+                        if not wrote2:
+                            wrote2 = 1
+                            outputf.write('\t'+temp)
+                            temp = ''
+                    if end < 1:
+                        break
+                outputf.write('\t'+temp+'\n')
+        outputf.close()
+        
 
 
 
-#print("Usage: python geneanalysis.py output annotation_files outputtest0827 ../genome-annotation/Census_all-Sep17-2020.csv temp $no_control")
+
+#print("Usage: python geneanalysis.py output annotation_files outputtest0827 ../genome-annotation/Census_all-Sep17-2020.csv temp $no_control ../genome-annotation/refGene.txt")
 print("\n-> Analyzing sensitive genes......")
 output_folder = sys.argv[1]
 anno_folder = sys.argv[2]
@@ -323,6 +462,7 @@ output_name = sys.argv[3]
 anno_cancer_file = sys.argv[4]
 temp_folder = sys.argv[5]
 no_control = sys.argv[6]
+anno_refgene = sys.argv[7]
 
 # x = 1
 # while x <= 22:
@@ -344,7 +484,7 @@ no_control = sys.argv[6]
 
 
 
-
+## <- find sensitive cancer genes -> ##
 
 # only need to run this method once
 process_cancer_genes()
@@ -359,3 +499,21 @@ for x in xs:
     calc_pval(x)
     i += 1
 update_progress(1, 0)
+
+
+print("Analyzing break density of genes......")
+
+## <- find distribution wrt all genes -> ##
+xs.append('Y')
+
+# only need to run this method once
+process_refgene(xs)
+
+i=0
+for x in xs:
+    update_progress(i/24, x)
+    alignto_refgene(x)
+    i += 1
+update_progress(1, 0)
+
+

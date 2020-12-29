@@ -63,7 +63,7 @@ def compare_tc(chrnum):
         with open(temp_folder+'/chr'+str(chrnum)+'t_hitsfiltered.txt', 'r') as tfile:
             outputf = open(temp_folder+"/chr"+str(chrnum)+"_comparedhits.txt", "a+")
             for lt in tfile:
-                outputf.write(lt.split()[3]+'\t'+lt.split()[4]+'\t'+lt.split()[5]+'\t'+str(len(lt.split()[5]))+'\n')
+                outputf.write(lt.split()[3]+'\t'+lt.split()[4]+'\t'+lt.split()[5]+'\t'+str(len(lt.split()[5]))+'\t'+lt.split()[2]+'\n')
             outputf.close()
 
     repetitive_reads(chrnum)
@@ -93,30 +93,30 @@ def slight_divergent(chrnum):
         n = []
         for current_line in tfile: 
             if prev_line != '':
-                if int(prev_line.split()[1])+5 > int(current_line.split()[1]):
+                if int(prev_line.split()[1])+5 > int(current_line.split()[1]) and prev_line.split()[4] == current_line.split()[4]:
                     temp.append(prev_line.split()[1])
-                    n.append(int(prev_line.split()[4]))
+                    n.append(int(prev_line.split()[5]))
                 else:
                     if n: # if n not empty
                         temp.append(prev_line.split()[1])
-                        n.append(int(prev_line.split()[4]))
+                        n.append(int(prev_line.split()[5]))
                         index = n.index(max(n))
-                        outputf.write(prev_line.split()[0]+'\t'+temp[index]+'\t'+str(sum(n))+'\n')
+                        outputf.write(prev_line.split()[0]+'\t'+temp[index]+'\t'+str(sum(n))+'\t'+prev_line.split()[4]+'\n')
                         temp = []
                         n = []
                     else:
-                        outputf.write(prev_line.split()[0]+'\t'+str(prev_line.split()[1])+'\t1\n')
+                        outputf.write(prev_line.split()[0]+'\t'+str(prev_line.split()[1])+'\t1\t'+prev_line.split()[4]+'\n')
             prev_line = current_line
         # deal with the last line
         if n: # if n not empty
             temp.append(prev_line.split()[1])
-            n.append(int(prev_line.split()[4]))
+            n.append(int(prev_line.split()[5]))
             index = n.index(max(n))
-            outputf.write(prev_line.split()[0]+'\t'+temp[index]+'\t'+str(sum(n))+'\n')
+            outputf.write(prev_line.split()[0]+'\t'+temp[index]+'\t'+str(sum(n))+'\t'+prev_line.split()[4]+'\n')
             temp = []
             n = []
         else:
-            outputf.write(prev_line.split()[0]+'\t'+str(prev_line.split()[1])+'\t1\n')
+            outputf.write(prev_line.split()[0]+'\t'+str(prev_line.split()[1])+'\t1\t'+prev_line.split()[4]+'\n')
         outputf.close()
 
 
@@ -159,25 +159,40 @@ def generate_chr_sequences2(chrnum, window_size):
             line += genome
             genome = line
         with open(temp_folder+"/chr"+str(chrnum)+"_comparedhits_repeats_combined.txt", 'r') as hitsfile:
-            indexes = np.array(range(-window_size, window_size+1)).astype('str')
+            indexes = np.array(range(-window_size, window_size+1))
             # print(indexes)
             out = pd.DataFrame(0, index=indexes, columns=['A', 'T', 'C', 'G'])
             for lineh in hitsfile:
                 # pr1 is at position 0
                 pr0 = int(lineh.split()[1]) - 1
-                sequence = genome[pr0-window_size : pr0+window_size+1]
-                add_count2(sequence.upper(), out, indexes)
+                sequence = genome[pr0-window_size : pr0+window_size+1].upper() # if aligned to + strand
+                add_count2(sequence, out, indexes, lineh.split()[3])
     return out
 
-# helper method for generate_chr_sequences2()
-def add_count2(bases, df, indexes):
+
+# private helper method for generate_chr_sequences2()
+def add_count2(bases, df, indexes, direction):
     if bases.find('N') != -1: # if bases sequence contains N
         return df
-    index = 0
-    for i in indexes:
-        df.at[str(i), bases[index]] += 1
-        index += 1
-    return df       
+    if direction == '+':
+        index = 0
+        for i in indexes:
+            df.at[i, bases[index]] += 1
+            index += 1
+        return df  
+    elif direction == '-':
+        index = 0
+        for i in indexes:
+            if bases[index] == 'A':
+                df.at[i, 'T'] += 1
+            elif bases[index] == 'T':
+                df.at[i, 'A'] += 1
+            elif bases[index] == 'G':
+                df.at[i, 'C'] += 1
+            elif bases[index] == 'C':
+                df.at[i, 'G'] += 1
+            index += 1
+        return df      
 
 
 def count_sample(output_csv, window_size):
@@ -306,7 +321,7 @@ df = count_sample(output_csv, window_size)
 # generate_hg_files()
 
 # only need to run this step once for human reference genome GRCh38
-df_hg = count_hg(output_csv_hg)
+# df_hg = count_hg(output_csv_hg)
 
 for x in xs:
     os.remove(temp_folder+"/chr"+str(x)+"_comparedhits.txt")

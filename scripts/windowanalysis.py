@@ -328,7 +328,7 @@ elif window_size > 0: # window size provided
     move_window(x, window_size)
     calc_pval(x, window_size, output_folder)
     i += 1
-  update_progress(10, -2)
+  update_progress(1, 0)
 
   df = pd.DataFrame(0.0, index = range(1), columns=['pval_variance', 'pval_numzeros'])
   find_var_sum(window_size, df, output_folder)

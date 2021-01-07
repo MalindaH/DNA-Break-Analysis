@@ -82,19 +82,10 @@ def move_window(chrnum, window_size):
     ref = open(temp_folder+"/outputtpy.txt", "r")
     f = open(temp_folder+"/chr"+str(chrnum)+"c_hitsfiltered.txt", "r")
     outputc = open(temp_folder+"/outputcpy.txt", "a+")
-    bl_pos = 0
     f_pos = 0
     lineref = ref.readline()
     x = int(lineref.split()[1])
     y = int(lineref.split()[2])
-    # adjust window size wrt blacklist
-    for linebl in bl:
-      bl_start = int(linebl.split()[1])
-      bl_end = int(linebl.split()[2])
-      if x <= bl_start and bl_start <= y:
-        y = bl_end + window_size - 1 - bl_start + x
-        bl_pos += len(linebl)
-      break
     count = 0
     more = False
     for line in f:
@@ -105,19 +96,13 @@ def move_window(chrnum, window_size):
       else:
         outputc.write("chr"+str(chrnum)+"\t"+str(x)+"\t"+str(y)+"\t"+str(count)+"\n")
         lineref = ref.readline()
-        more = False
         if lineref:
           more = True
           x = int(lineref.split()[1])
           y = int(lineref.split()[2])
-          bl.seek(bl_pos)
-          for linebl in bl:
-            bl_start = int(linebl.split()[1])
-            bl_end = int(linebl.split()[2])
-            if x <= bl_start and bl_start <= y:
-              y = bl_end + window_size - 1 - bl_start + x
-              bl_pos += len(linebl)
-            break
+        else:
+          more = False
+          break
         count = 0
         f.seek(f_pos)
     if more:
@@ -234,7 +219,8 @@ def poisson_pval(t, mu):
 def find_window_size():
   print("Finding best window size...")
   # takes longer for smaller window sizes; more than 30000bp is too sparse
-  sizes = [1000, 2000, 4000, 6000, 8000, 10000, 15000, 20000, 25000, 30000]
+  # sizes = [1000, 2000, 4000, 6000, 8000, 10000, 15000, 20000, 25000, 30000]
+  sizes = [4000, 6000, 8000, 10000, 15000, 20000]
   # sizes = [500, 750, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 25000, 50000]
 
   df = pd.DataFrame(0.0, index=sizes, columns=['pval_variance', 'pval_numzeros'])
@@ -258,9 +244,9 @@ def find_window_size():
     for x in xs:
       os.remove(temp_folder+'/chr'+str(x)+'_pval.txt')
 
-    if df.at[size,'pval_variance'] < df.at[sizes[sizes.index(size)-1],'pval_variance']: # max variance is at sizes[sizes.index(size)-1]
-      window_size = sizes[sizes.index(size)-1]
-      break
+    # if size >= 5000 and df.at[size,'pval_variance'] < df.at[sizes[sizes.index(size)-1],'pval_variance']: # max variance is at sizes[sizes.index(size)-1]
+    #   window_size = sizes[sizes.index(size)-1]
+    #   break
 
   print(df)  
   if window_size == -1:

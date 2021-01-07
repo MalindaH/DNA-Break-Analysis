@@ -36,7 +36,7 @@ def update_progress(progress, chrnum):
 
 def compare_tc(chrnum):
     # delete sequences slightly divergent owing to sequencing errors
-    if no_control == '0':
+    if no_control == '0': # with control
         with open(temp_folder+'/chr'+str(chrnum)+'t_hitsfiltered.txt', 'r') as tfile, open(temp_folder+'/chr'+str(chrnum)+'c_hitsfiltered.txt', 'r') as cfile:
             outputf = open(temp_folder+"/chr"+str(chrnum)+"_comparedhits.txt", "a+")
             f_pos = 0
@@ -52,14 +52,14 @@ def compare_tc(chrnum):
                         f_pos += len(lt)
                         break
                     else:
-                        outputf.write(lt.split()[3]+'\t'+lt.split()[4]+'\t'+lt.split()[5]+'\t'+str(len(lt.split()[5]))+'\n')
+                        outputf.write(lt.split()[3]+'\t'+lt.split()[4]+'\t'+lt.split()[5]+'\t'+str(len(lt.split()[5]))+'\t'+lt.split()[2]+'\n')
                         f_pos += len(lt)
                         continue
             # print remaining lines
             for lt in tfile:
-                outputf.write(lt.split()[3]+'\t'+lt.split()[4]+'\t'+lt.split()[5]+'\t'+str(len(lt.split()[5]))+'\n')
+                outputf.write(lt.split()[3]+'\t'+lt.split()[4]+'\t'+lt.split()[5]+'\t'+str(len(lt.split()[5]))+'\t'+lt.split()[2]+'\n')
             outputf.close()
-    else:
+    else: # no control
         with open(temp_folder+'/chr'+str(chrnum)+'t_hitsfiltered.txt', 'r') as tfile:
             outputf = open(temp_folder+"/chr"+str(chrnum)+"_comparedhits.txt", "a+")
             for lt in tfile:
@@ -327,6 +327,7 @@ for x in xs:
     os.remove(temp_folder+"/chr"+str(x)+"_comparedhits.txt")
     os.remove(temp_folder+"/chr"+str(x)+"_comparedhits_repeats1.txt")
     os.remove(temp_folder+"/chr"+str(x)+"_comparedhits_repeats2.txt")
-    os.remove(temp_folder+"/chr"+str(x)+"_comparedhits_repeats_combined.txt")
+    if no_control == '1': # without control:
+        os.remove(temp_folder+"/chr"+str(x)+"_comparedhits_repeats_combined.txt")
 
 

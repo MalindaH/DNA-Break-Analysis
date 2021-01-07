@@ -46,7 +46,7 @@ done
 
 echo -e "\nInputs:"
 echo " -- treated (bowtie output): $treated"
-if [ $no_control ]; then
+if [[ "$no_control" -eq 1 ]]; then
     echo " -- no control"
 else
     echo " -- control (bowtie output): $control"
@@ -78,46 +78,46 @@ function filterSort_KeepRepetitive() {
         for((x=1;x<=22;x++)); do
             # sort in numerical order
             cat $treated | grep -P "chr${x}\t" | awk '{ print $1,$2,$4,$5,$6,$7,$8,$9 }' | sort -k 5 -n > ${1}/chr${x}t_hitssorted.txt
-            if [ ! $no_control ]; then
+            if [[ "$no_control" -ne 1 ]]; then
                 cat $control | grep -P "chr${x}\t" | awk '{ print $1,$2,$4,$5,$6,$7,$8,$9 }' | sort -k 5 -n > ${1}/chr${x}c_hitssorted.txt
             fi
         done
 
         cat $treated | grep  -P "chrX\t" | awk '{ print $1,$2,$4,$5,$6,$7,$8,$9 }' | sort -k 5 -n > ${1}/chrXt_hitssorted.txt
-        if [ ! $no_control ]; then
+        if [[ "$no_control" -ne 1 ]]; then
             cat $control | grep  -P "chrX\t" | awk '{ print $1,$2,$4,$5,$6,$7,$8,$9 }' | sort -k 5 -n > ${1}/chrXc_hitssorted.txt
         fi
 
         cat $treated | grep  -P "chrY\t" | awk '{ print $1,$2,$4,$5,$6,$7,$8,$9 }' | sort -k 5 -n > ${1}/chrYt_hitssorted.txt
-        if [ ! $no_control ]; then
+        if [[ "$no_control" -ne 1 ]]; then
             cat $control | grep  -P "chrY\t" | awk '{ print $1,$2,$4,$5,$6,$7,$8,$9 }' | sort -k 5 -n > ${1}/chrYc_hitssorted.txt
         fi
     
         cat $treated | grep  -P "chrM\t" | awk '{ print $1,$2,$4,$5,$6,$7,$8,$9 }' | sort -k 5 -n > ${1}/chrMt_hitssorted.txt
-        if [ ! $no_control ]; then
+        if [[ "$no_control" -ne 1 ]]; then
             cat $control | grep  -P "chrM\t" | awk '{ print $1,$2,$4,$5,$6,$7,$8,$9 }' | sort -k 5 -n > ${1}/chrMc_hitssorted.txt
         fi
     else    
         for((x=1;x<=22;x++)); do
             # sort in numerical order
             cat $treated | grep -P "chr${x}\t" | sort -k 5 -n > ${1}/chr${x}t_hitssorted.txt
-            if [ ! $no_control ]; then
+            if [[ "$no_control" -ne 1 ]]; then
                 cat $control | grep -P "chr${x}\t" | sort -k 5 -n > ${1}/chr${x}c_hitssorted.txt
             fi
         done
 
         cat $treated | grep  -P "chrX\t" | sort -k 5 -n > ${1}/chrXt_hitssorted.txt
-        if [ ! $no_control ]; then
+        if [[ "$no_control" -ne 1 ]]; then
             cat $control | grep  -P "chrX\t" | sort -k 5 -n > ${1}/chrXc_hitssorted.txt
         fi
 
         cat $treated | grep  -P "chrY\t" | sort -k 5 -n > ${1}/chrYt_hitssorted.txt
-        if [ ! $no_control ]; then
+        if [[ "$no_control" -ne 1 ]]; then
             cat $control | grep  -P "chrY\t" | sort -k 5 -n > ${1}/chrYc_hitssorted.txt
         fi
     
         cat $treated | grep  -P "chrM\t" | sort -k 5 -n > ${1}/chrMt_hitssorted.txt
-        if [ ! $no_control ]; then
+        if [[ "$no_control" -ne 1 ]]; then
             cat $control | grep  -P "chrM\t" | sort -k 5 -n > ${1}/chrMc_hitssorted.txt
         fi
     fi
@@ -161,35 +161,23 @@ function forGTF() {
     grep -P "chrM\t" annotation_files/annotation-protein-coding.gtf > annotation_files/chrM_annotation-protein-coding.gtf
 }
 
-function ranksensitivegenes() {
-    # cat output/chr1_sensitive-genes.txt output/chr2_sensitive-genes.txt output/chr3_sensitive-genes.txt output/chr4_sensitive-genes.txt output/chr5_sensitive-genes.txt output/chr6_sensitive-genes.txt output/chr7_sensitive-genes.txt output/chr8_sensitive-genes.txt output/chr9_sensitive-genes.txt output/chr10_sensitive-genes.txt output/chr11_sensitive-genes.txt output/chr12_sensitive-genes.txt output/chr13_sensitive-genes.txt output/chr14_sensitive-genes.txt output/chr15_sensitive-genes.txt output/chr16_sensitive-genes.txt output/chr17_sensitive-genes.txt output/chr18_sensitive-genes.txt output/chr19_sensitive-genes.txt output/chr20_sensitive-genes.txt output/chr21_sensitive-genes.txt output/chr22_sensitive-genes.txt output/chrX_sensitive-genes.txt > output/allchr_sensitive-genes.txt
-    # sort -k 1 -gr output/allchr_sensitive-genes.txt > output/allchr_sensitive-genes-sorted.txt
-    # rm output/chr1_sensitive-genes.txt output/chr2_sensitive-genes.txt output/chr3_sensitive-genes.txt output/chr4_sensitive-genes.txt output/chr5_sensitive-genes.txt output/chr6_sensitive-genes.txt output/chr7_sensitive-genes.txt output/chr8_sensitive-genes.txt output/chr9_sensitive-genes.txt output/chr10_sensitive-genes.txt output/chr11_sensitive-genes.txt output/chr12_sensitive-genes.txt output/chr13_sensitive-genes.txt output/chr14_sensitive-genes.txt output/chr15_sensitive-genes.txt output/chr16_sensitive-genes.txt output/chr17_sensitive-genes.txt output/chr18_sensitive-genes.txt output/chr19_sensitive-genes.txt output/chr20_sensitive-genes.txt output/chr21_sensitive-genes.txt output/chr22_sensitive-genes.txt output/chrX_sensitive-genes.txt
-
-    cat output/chr1_sensitive-cancer-genes.txt output/chr2_sensitive-cancer-genes.txt output/chr3_sensitive-cancer-genes.txt output/chr4_sensitive-cancer-genes.txt output/chr5_sensitive-cancer-genes.txt output/chr6_sensitive-cancer-genes.txt output/chr7_sensitive-cancer-genes.txt output/chr8_sensitive-cancer-genes.txt output/chr9_sensitive-cancer-genes.txt output/chr10_sensitive-cancer-genes.txt output/chr11_sensitive-cancer-genes.txt output/chr12_sensitive-cancer-genes.txt output/chr13_sensitive-cancer-genes.txt output/chr14_sensitive-cancer-genes.txt output/chr15_sensitive-cancer-genes.txt output/chr16_sensitive-cancer-genes.txt output/chr17_sensitive-cancer-genes.txt output/chr18_sensitive-cancer-genes.txt output/chr19_sensitive-cancer-genes.txt output/chr20_sensitive-cancer-genes.txt output/chr21_sensitive-cancer-genes.txt output/chr22_sensitive-cancer-genes.txt output/chrX_sensitive-cancer-genes.txt > output/allchr_sensitive-cancer-genes.txt
-    sort -k 1 -gr output/allchr_sensitive-cancer-genes.txt > output/allchr_sensitive-cancer-genes-sorted.txt
-    rm output/chr1_sensitive-cancer-genes.txt output/chr2_sensitive-cancer-genes.txt output/chr3_sensitive-cancer-genes.txt output/chr4_sensitive-cancer-genes.txt output/chr5_sensitive-cancer-genes.txt output/chr6_sensitive-cancer-genes.txt output/chr7_sensitive-cancer-genes.txt output/chr8_sensitive-cancer-genes.txt output/chr9_sensitive-cancer-genes.txt output/chr10_sensitive-cancer-genes.txt output/chr11_sensitive-cancer-genes.txt output/chr12_sensitive-cancer-genes.txt output/chr13_sensitive-cancer-genes.txt output/chr14_sensitive-cancer-genes.txt output/chr15_sensitive-cancer-genes.txt output/chr16_sensitive-cancer-genes.txt output/chr17_sensitive-cancer-genes.txt output/chr18_sensitive-cancer-genes.txt output/chr19_sensitive-cancer-genes.txt output/chr20_sensitive-cancer-genes.txt output/chr21_sensitive-cancer-genes.txt output/chr22_sensitive-cancer-genes.txt output/chrX_sensitive-cancer-genes.txt
-
-    cat output/chr*_refgene_counts.txt > output/chrAll_refgene_counts.txt
-    rm output/chr*_refgene_counts.txt
-}
 
 
 
 ## --- prep steps --- ##
 
-filterSort_KeepRepetitive temp
+# filterSort_KeepRepetitive temp
 
 ## Remove blacklisted alignments: (only need to run blacklistPrep once)
-blacklistPrep
-python filterblacklist.py temp blacklist_files $no_control
+# blacklistPrep
+# python filterblacklist.py temp blacklist_files $no_control
 
 if [ ! -r output ]; then
     mkdir output
 fi
 
-## --- for statistics of sequence bias --- ##
-python dsbsequence.py temp ${hgfile} output blacklist_files $no_control DSB-count-1218 10
+## --- for statistics of break sequence motif --- ##
+# python dsbsequence.py temp ${hgfile} output blacklist_files $no_control DSB-count-1218 10
 
 if [ ! -r annotation_files ]; then
     mkdir annotation_files
@@ -197,11 +185,10 @@ fi
 
 ## --- Calculate p values for window of cencer genes, and break density wrt TSS and TTS--- ##
 python geneanalysis.py output annotation_files $outputname $annotationfilecancer temp $no_control $annotationfilerefgene
-ranksensitivegenes
 
 
 ## --- Calculate p (and q) values for window of user-defined size --- ##
-python windowanalysis.py temp output $wsize $outputname blacklist_files $no_control
+# python windowanalysis.py temp output $wsize $outputname blacklist_files $no_control
 
 
 

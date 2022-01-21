@@ -48,7 +48,7 @@ def compare_tc(chrnum):
                         # go back one line before break
                         tfile.seek(f_pos)
                         break
-                    elif abs(pt - pc) <= 12: # don't add this read
+                    elif abs(pt - pc) <= 12 and lt.split()[2] == lc.split()[2]: # don't add this read
                         f_pos += len(lt)
                         break
                     else:
@@ -59,7 +59,7 @@ def compare_tc(chrnum):
             for lt in tfile:
                 outputf.write(lt.split()[3]+'\t'+lt.split()[4]+'\t'+lt.split()[5]+'\t'+str(len(lt.split()[5]))+'\t'+lt.split()[2]+'\n')
             outputf.close()
-    else: # no control
+    else:
         with open(temp_folder+'/chr'+str(chrnum)+'t_hitsfiltered.txt', 'r') as tfile:
             outputf = open(temp_folder+"/chr"+str(chrnum)+"_comparedhits.txt", "a+")
             for lt in tfile:
@@ -159,14 +159,15 @@ def generate_chr_sequences2(chrnum, window_size):
             line += genome
             genome = line
         with open(temp_folder+"/chr"+str(chrnum)+"_comparedhits_repeats_combined.txt", 'r') as hitsfile:
-            indexes = np.array(range(-window_size, window_size+1))
+            indexes = np.delete(np.array(range(-window_size+1, window_size+1)), window_size-1) # -n+1 ... -1, 1, ... n
             # print(indexes)
             out = pd.DataFrame(0, index=indexes, columns=['A', 'T', 'C', 'G'])
             for lineh in hitsfile:
-                # pr1 is at position 0
+                # pr1 is at position 1
                 pr0 = int(lineh.split()[1]) - 1
-                sequence = genome[pr0-window_size : pr0+window_size+1].upper() # if aligned to + strand
-                add_count2(sequence, out, indexes, lineh.split()[3])
+                if pr0-window_size >= 0 and pr0+window_size+1 <= len(genome):
+                    sequence = genome[pr0-window_size : pr0+window_size+1].upper() # if aligned to + strand
+                    add_count2(sequence, out, indexes, lineh.split()[3])
     return out
 
 
@@ -295,7 +296,7 @@ def count_hg(output_csv_hg):
 
 #print("Usage: python dsbsequence.py temp ../bowtie-files/hg19.fa output blacklist_files $no_control DSB-count-1126 2")
 #print("Usage: python dsbsequence.py temp bowtie-files/GRCh38 output blacklist_files $no_control DSB-count-1126 10")
-print("\n-> Analyzing break sequence bias......")
+print("\n-> Analyzing break sequence motif......")
 temp_folder = sys.argv[1]
 hg_filepath = sys.argv[2]
 output_folder = sys.argv[3]
@@ -327,7 +328,8 @@ for x in xs:
     os.remove(temp_folder+"/chr"+str(x)+"_comparedhits.txt")
     os.remove(temp_folder+"/chr"+str(x)+"_comparedhits_repeats1.txt")
     os.remove(temp_folder+"/chr"+str(x)+"_comparedhits_repeats2.txt")
-    if no_control == '1': # without control:
-        os.remove(temp_folder+"/chr"+str(x)+"_comparedhits_repeats_combined.txt")
+    # if no_control == '1': # without control:
+    #     os.remove(temp_folder+"/chr"+str(x)+"_comparedhits_repeats_combined.txt")
+        # don't remove if with control, because this file is used in geneanalysis.py and geneanalysis2.py for with control
 
 

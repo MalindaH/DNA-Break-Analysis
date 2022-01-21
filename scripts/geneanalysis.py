@@ -6,6 +6,7 @@ from decimal import *
 import math
 import operator as op
 from functools import reduce
+from scipy.stats import hypergeom
 
 
 # Displays or updates a console progress bar: <0 = 'halt'; >=1 = 100%
@@ -139,7 +140,7 @@ def process_cancer_genes():
         x += 1
 
 
-# output files: column 1 - relative number of peaks, column 4 - p-value
+# output files: column 1 - relative number of peaks, column 2-last - gene info
 # move windows of csv file from Cancer gene census (Census_all-Sep17-2020.csv)
 def alignto_cancer_genes(chrnum):
     with open(anno_folder+"/chr"+str(chrnum)+"_cancer-genes-sorted.txt", "r") as genes:
@@ -148,7 +149,7 @@ def alignto_cancer_genes(chrnum):
         # keep track of which line has been read in genes
         genes_pos = 0
         for lineg in genes:
-            p_val_sum = 0
+            # p_val_sum = 0
             start = int(lineg.split()[1])
             end = int(lineg.split()[2])
             #print("start = "+str(start)+", end = "+str(end))
@@ -173,14 +174,14 @@ def alignto_cancer_genes(chrnum):
         x = int(lineref.split()[2])
         y = int(lineref.split()[3])
         
-        count = 0
+        count = 0.0
         more = False
         for line in f:
             position = int(line.split()[4])
             if position <= y:
                 count = count + 1
             elif position > y:
-                outputc.write(str(count/(end-start))+'\t'+lineg)
+                outputc.write(str(count/(y-x))+'\t'+'\t'.join(lineref.split()[1:])+'\n')
                 lineref = ref.readline()
                 if lineref:
                     more = True
@@ -192,15 +193,15 @@ def alignto_cancer_genes(chrnum):
                 count = 0
         #print(str(x)+" and "+str(y))
         if more:
-            outputc.write('0\t'+lineg)
+            outputc.write('0.0\t'+'\t'.join(lineref.split()[1:])+'\n')
             for lineref in ref:
                 x = int(lineref.split()[2])
                 y = int(lineref.split()[3])
                 #print(str(x)+" and "+str(y))
-                outputc.write('0\t'+lineg)
+                outputc.write('0.0\t'+'\t'.join(lineref.split()[1:])+'\n')
         if x == 0:
             #print("write")
-            outputc.write(str(count/(end-start))+'\t'+lineg)
+            outputc.write(str(count/(y-x))+'\t'+'\t'.join(lineref.split()[1:])+'\n')
         outputc.close()
         f.close()
         ref.close()
@@ -235,7 +236,8 @@ def calc_pval(chrnum):
                     continue
                 m = x + c
                 # print('(N,k,m,x) = '+str(N)+','+str(k)+','+str(m)+','+str(x))
-                p_val = hypergeom_pval(N,k,m,x)
+                # p_val = hypergeom_pval(N,k,m,x)
+                p_val = hypergeom.pmf(x, N, m, k)
                 # if str(p_val) == "0.0":
                 #     print('(N,k,m,x) = '+str(N)+','+str(k)+','+str(m)+','+str(x))
                 # print(p_val)
@@ -316,6 +318,7 @@ def alignto_refgene(chrnum):
         with open(anno_folder+"/chr"+str(chrnum)+"_refgene_sorted.txt", "r") as refg:
             outputf = open(output_folder+"/chr"+str(chrnum)+"_refgene_counts.txt", "a+")
             # name, chr, direction, TSS, TTS, windows 1-20, windows 21-180, windows 181-200 (1-20 before TSS, 181-200 after TTS)
+            # 5000bp upstream of TSS ~ 5000bp downstream of TTS
             win_size1 = 250
             TSS_prev = 0
             TTS_prev = 0
@@ -568,36 +571,43 @@ def rank_output():
                     tfile.write(infile.read())
         for fname in filenames:
             os.remove(fname)
-        if no_control == '0': # with control:
-            tempfile = open('output/allchr_sensitive-cancer-genes-temp.txt', 'r')
-            tempfile2 = open('output/allchr_sensitive-cancer-genes-sorted-temp.txt', 'a+')
-            for line in sorted(tempfile, key=lambda line: float(line.split()[0]), reverse=True):
-                tempfile2.write(line)
-            tempfile.close()
-            os.remove('output/allchr_sensitive-cancer-genes-temp.txt')
-            tempfile2.close()
-            tempfile3 = open('output/allchr_sensitive-cancer-genes-sorted-temp.txt', 'r')
-            tempfile4 = open('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt', 'a+')
-            outfile = open('output/allchr_sensitive-cancer-genes-sorted.txt', 'a+')
-            for line in tempfile3:
-                if float(line.split()[2]) > 0.00001:
-                    tempfile4.write(line)
-                else:
-                    outfile.write(line)
-            tempfile4.close()
-            tempfile5 = open('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt', 'r')
-            outfile.write(tempfile5.read())
-            outfile.close()
-            os.remove('output/allchr_sensitive-cancer-genes-sorted-temp.txt')
-            os.remove('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt')
-        else:
-            tempfile = open('output/allchr_sensitive-cancer-genes-temp.txt', 'r')
-            outfile = open('output/allchr_sensitive-cancer-genes-sorted.txt', 'a+')
-            for line in sorted(tempfile, key=lambda line: float(line.split()[0])):
-                outfile.write(line)
-            tempfile.close()
-            os.remove('output/allchr_sensitive-cancer-genes-temp.txt')
-            outfile.close()
+        # if no_control == '0': # with control:
+        #     tempfile = open('output/allchr_sensitive-cancer-genes-temp.txt', 'r')
+        #     tempfile2 = open('output/allchr_sensitive-cancer-genes-sorted-temp.txt', 'a+')
+        #     for line in sorted(tempfile, key=lambda line: float(line.split()[0]), reverse=True):
+        #         tempfile2.write(line)
+        #     tempfile.close()
+        #     os.remove('output/allchr_sensitive-cancer-genes-temp.txt')
+        #     tempfile2.close()
+        #     tempfile3 = open('output/allchr_sensitive-cancer-genes-sorted-temp.txt', 'r')
+        #     tempfile4 = open('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt', 'a+')
+        #     outfile = open('output/allchr_sensitive-cancer-genes-sorted.txt', 'a+')
+        #     for line in tempfile3:
+        #         if float(line.split()[2]) > 0.00001:
+        #             tempfile4.write(line)
+        #         else:
+        #             outfile.write(line)
+        #     tempfile4.close()
+        #     tempfile5 = open('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt', 'r')
+        #     outfile.write(tempfile5.read())
+        #     outfile.close()
+        #     os.remove('output/allchr_sensitive-cancer-genes-sorted-temp.txt')
+        #     os.remove('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt')
+        # else:
+        #     tempfile = open('output/allchr_sensitive-cancer-genes-temp.txt', 'r')
+        #     outfile = open('output/allchr_sensitive-cancer-genes-sorted.txt', 'a+')
+        #     for line in sorted(tempfile, key=lambda line: float(line.split()[0])):
+        #         outfile.write(line)
+        #     tempfile.close()
+        #     os.remove('output/allchr_sensitive-cancer-genes-temp.txt')
+        #     outfile.close()
+        tempfile = open('output/allchr_sensitive-cancer-genes-temp.txt', 'r')
+        outfile = open('output/allchr_sensitive-cancer-genes-sorted.txt', 'a+')
+        for line in sorted(tempfile, key=lambda line: float(line.split()[0])):
+            outfile.write(line)
+        tempfile.close()
+        os.remove('output/allchr_sensitive-cancer-genes-temp.txt')
+        outfile.close()
 
     if os.path.exists('output/chr1_refgene_counts.txt'):
         filenames = ['output/chr1_refgene_counts.txt', 'output/chr2_refgene_counts.txt', 'output/chr3_refgene_counts.txt', 
@@ -626,6 +636,8 @@ temp_folder = sys.argv[5]
 no_control = sys.argv[6]
 anno_refgene = sys.argv[7]
 
+## <- for gencode.v34.annotation.gtf, not fully implemented yet -> ##
+
 # x = 1
 # while x <= 22:
 #     alignto_genes(x)
@@ -646,21 +658,21 @@ anno_refgene = sys.argv[7]
 
 
 
-## <- find sensitive cancer genes -> ##
+## <- find sensitive cancer genes, for Cancer gene census (Census_all-Sep17-2020.csv) -> ##
 
 # only need to run this method once
-# process_cancer_genes()
+process_cancer_genes()
 
 xs = list(range(1,23))
 xs.append('X') # only chrX has cancer genes in cancer file
 
-# i=0
-# for x in xs:
-#     update_progress(i/23, x)
-#     alignto_cancer_genes(x)
-#     calc_pval(x)
-#     i += 1
-# update_progress(1, 0)
+i=0
+for x in xs:
+    update_progress(i/23, x)
+    alignto_cancer_genes(x)
+    calc_pval(x)
+    i += 1
+update_progress(1, 0)
 
 
 print("Analyzing break density of genes...")
@@ -669,7 +681,7 @@ print("Analyzing break density of genes...")
 xs.append('Y')
 
 # only need to run this method once
-# process_refgene(xs)
+process_refgene(xs)
 
 i=0
 for x in xs:
@@ -679,3 +691,4 @@ for x in xs:
 update_progress(1, 0)
 
 rank_output()
+

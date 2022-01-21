@@ -292,8 +292,8 @@ if [ ! -r annotation_files ]; then
     mkdir annotation_files
 fi
 
-# ## --- Calculate p values for window of cencer genes, and break density wrt TSS and TTS --- ##
-# python geneanalysis.py output annotation_files $outputname $annotationfilecancer temp $no_control $annotationfilerefgene
+## --- Calculate p values for window of cencer genes, and break density wrt TSS and TTS --- ##
+python geneanalysis.py output annotation_files $outputname $annotationfilecancer temp $no_control $annotationfilerefgene
 if [[ "$no_control" -eq 1 ]]; then # no control
     tail -r output/allchr_sensitive-cancer-genes-sorted.txt > output/allchr_sensitive-cancer-genes-sorted-bigtosmall.txt
 else # with control

@@ -1,5 +1,5 @@
 # DSB-Analysis
-Scripts I wrote for DNA break analysis.
+Scripts I wrote for DNA double-strand break analysis.
 Referred to methods of:
 - iSeq Hygestat_BLESS (http://breakome.utmb.edu/software.html)
 - MACS peak calling (https://hbctraining.github.io/Intro-to-ChIPseq/lessons/05_peak_calling_macs.html)

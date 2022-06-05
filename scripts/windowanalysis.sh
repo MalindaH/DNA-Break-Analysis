@@ -5,7 +5,7 @@
 # ./windowanalysis.sh --no-control -t bowtie-output-1.txt -o outputtest0701 -B ../genome-annotation/GRCh38_unified_blacklist.bed -G ../genome-annotation/gencode.v34.annotation.gtf -C ../genome-annotation/Census_all-Sep17-2020.csv -hg ../bowtie-files/GRCh38 -R ../genome-annotation/refGene.txt -r 1 (-s 10000)
 # ./windowanalysis.sh -t ../work_dir_eto11-UMI/bowtie-output-1.txt -c ../work_dir_dmso11-UMI/bowtie-output-1.txt -o outputtest0701 -B ../genome-annotation/GRCh38_unified_blacklist.bed -G ../genome-annotation/gencode.v34.annotation.gtf -C ../genome-annotation/Census_all-Sep17-2020.csv -hg ../bowtie-files/GRCh38 -R ../genome-annotation/refGene.txt -r 1 -s 8000
 # ./windowanalysis.sh -t bowtie-output-1.txt -c ../work_dir_56-dmso/bowtie-output-1.txt -o outputtest0701 -B ../genome-annotation/GRCh38_unified_blacklist.bed -G ../genome-annotation/GRCh38_latest_genomic.gff -C ../genome-annotation/Census_all-Sep17-2020.csv -hg ../bowtie-files/GRCh38 -R ../genome-annotation/refGene.txt -r 1 -E ../genome-annotation/U2OS_gene_expression.txt -s 10000
-
+# ./windowanalysis.sh --no-control -t bowtie-output-HA1.txt -o outputtest0527 -B ../genome-annotation/GRCh38_unified_blacklist.bed -G ../genome-annotation/gencode.v34.annotation.gtf -R ../genome-annotation/refGene.txt -C ../genome-annotation/Census_all-Sep17-2020.csv -DR ../genome-annotation/DNA_repair_genes_Lucia.csv -hg ../bowtie-files/GRCh38 -r 2 -s 10000
 
 function show_help() {
     echo -e "Usage: ./windowanalysis.sh [options]\n\n[options] include:\t
@@ -18,7 +18,8 @@ function show_help() {
             (if not provided, find and use window size with highest variance of p-values)
         -o|--output <output-filename>
         -B <blacklist-file>
-        -C <cancer-gene-consensus.csv-annotation-file>
+        -C <cancer-gene-consensus-annotation-file.csv>
+        -DR <DNA-repair-gene-annotation-file.csv>
         -hg <human-reference-genome-file>
         -R <refGene.txt-annotation-file>
         -E <U2OS_gene_expression.txt-gene-expression-file>
@@ -26,7 +27,7 @@ function show_help() {
             (this function is not implemented for use yet)";
 }
 
-if [ $# -lt 16 ] || [ $# -gt 22 ]; then  
+if [ $# -lt 18 ] || [ $# -gt 24 ]; then  
     show_help;
     exit 2
 fi
@@ -46,9 +47,10 @@ while [[ "$#" -gt 0 ]]; do
         -G) annotationfilegtf="$2"; shift ;;
         -R) annotationfilerefgene="$2"; shift ;;
         -C) annotationfilecancer="$2"; shift ;;
+        -DR) annotationfilerepair="$2"; shift ;;
         -E) annotationfilegeneexp="$2"; shift ;;
         -hg) hgfile="$2"; shift ;;
-        *) echo "Unknown parameter passed: $1" ;;
+        *) echo "Unknown parameter passed: $1" ; show_help; exit 2;;
     esac
     shift
 done
@@ -71,6 +73,7 @@ echo " -- output name: $outputname"
 echo " -- human reference genome file or folder (.fa): $hgfile"
 echo " -- blacklist file (.bed): $blacklist"
 echo " -- annotation file (cancer census, .csv): $annotationfilecancer"
+echo " -- annotation file (DNA repair genes, .csv): $annotationfilerepair"
 echo " -- annotation file (refGene, .txt): $annotationfilerefgene"
 echo " -- annotation file (gene expression, .txt): $annotationfilegeneexp"
 echo " -- annotation file (gencode, .gtf): $annotationfilegtf"
@@ -200,28 +203,28 @@ function blacklistPrep() {
 }
 
 # for gencode.v34.annotation.gtf 
-function forGTF() {
-    if [ ! -r annotation_files ]; then
-        mkdir annotation_files
-    fi
+# function forGTF() {
+#     if [ ! -r annotation_files ]; then
+#         mkdir annotation_files
+#     fi
 
-    grep "gene\t" $annotationfilegtf > annotation_files/annotation-genes.txt
-    grep "protein_coding" annotation_files/annotation-genes.txt > annotation_files/annotation-protein-coding.txt
+#     grep "gene\t" $annotationfilegtf > annotation_files/annotation-genes.txt
+#     grep "protein_coding" annotation_files/annotation-genes.txt > annotation_files/annotation-protein-coding.txt
 
-    for((x=1;x<=22;x++)); do
-        grep "chr$x\t" annotation_files/annotation-genes.txt > annotation_files/chr${x}_annotation-genes.txt
-        grep "chr$x\t" annotation_files/annotation-protein-coding.txt > annotation_files/chr${x}_annotation-protein-coding.txt
-    done
+#     for((x=1;x<=22;x++)); do
+#         grep "chr$x\t" annotation_files/annotation-genes.txt > annotation_files/chr${x}_annotation-genes.txt
+#         grep "chr$x\t" annotation_files/annotation-protein-coding.txt > annotation_files/chr${x}_annotation-protein-coding.txt
+#     done
 
-    grep "chrX\t" annotation_files/annotation-genes.txt > annotation_files/chrX_annotation-genes.txt
-    grep "chrX\t" annotation_files/annotation-protein-coding.txt > annotation_files/chrX_annotation-protein-coding.txt
+#     grep "chrX\t" annotation_files/annotation-genes.txt > annotation_files/chrX_annotation-genes.txt
+#     grep "chrX\t" annotation_files/annotation-protein-coding.txt > annotation_files/chrX_annotation-protein-coding.txt
 
-    grep "chrY\t" annotation_files/annotation-genes.txt > annotation_files/chrY_annotation-genes.txt
-    grep "chrY\t" annotation_files/annotation-protein-coding.txt > annotation_files/chrY_annotation-protein-coding.txt
+#     grep "chrY\t" annotation_files/annotation-genes.txt > annotation_files/chrY_annotation-genes.txt
+#     grep "chrY\t" annotation_files/annotation-protein-coding.txt > annotation_files/chrY_annotation-protein-coding.txt
 
-    grep "chrM\t" annotation_files/annotation-genes.txt > annotation_files/chrM_annotation-genes.txt
-    grep "chrM\t" annotation_files/annotation-protein-coding.txt > annotation_files/chrM_annotation-protein-coding.txt
-}
+#     grep "chrM\t" annotation_files/annotation-genes.txt > annotation_files/chrM_annotation-genes.txt
+#     grep "chrM\t" annotation_files/annotation-protein-coding.txt > annotation_files/chrM_annotation-protein-coding.txt
+# }
 
 # for GRCh38_latest_genomic.gff
 function forGTF-gff() {
@@ -292,16 +295,14 @@ if [ ! -r annotation_files ]; then
     mkdir annotation_files
 fi
 
-## --- Calculate p values for window of cencer genes, and break density wrt TSS and TTS --- ##
+## --- Calculate p values for window of cancer genes, and break density wrt TSS and TTS --- ##
 python geneanalysis.py output annotation_files $outputname $annotationfilecancer temp $no_control $annotationfilerefgene
-if [[ "$no_control" -eq 1 ]]; then # no control
-    tail -r output/allchr_sensitive-cancer-genes-sorted.txt > output/allchr_sensitive-cancer-genes-sorted-bigtosmall.txt
-else # with control
-    cat output/allchr_sensitive-cancer-genes-sorted.txt > output/allchr_sensitive-cancer-genes-sorted-bigtosmall.txt
-fi
-# tail -r output/allchr_sensitive-cancer-genes-sorted.txt > output/allchr_sensitive-cancer-genes-sorted-bigtosmall.txt
+tail -r output/allchr_sensitive-cancer-genes-sorted.txt > output/allchr_sensitive-cancer-genes-sorted-bigtosmall.txt
+## --- Calculate p values for window of DNA repair genes --- ##
+python geneanalysis1.py output annotation_files $outputname $annotationfilerepair temp $no_control $annotationfilerefgene
+tail -r output/allchr_sensitive-repair-genes-sorted.txt > output/allchr_sensitive-repair-genes-sorted-bigtosmall.txt
 
-## ranksensitivegenes # don't need to run ranksensitivegenes, included in ths python script above
+## ranksensitivegenes # don't need to run ranksensitivegenes, included in the python script geneanalysis.py
 
 ## --- Calculate break density wrt TSS, TTS, wrt gene expression level --- ##
 forGTF-gff

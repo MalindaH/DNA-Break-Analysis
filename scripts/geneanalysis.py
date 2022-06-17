@@ -571,36 +571,6 @@ def rank_output():
                     tfile.write(infile.read())
         for fname in filenames:
             os.remove(fname)
-        # if no_control == '0': # with control:
-        #     tempfile = open('output/allchr_sensitive-cancer-genes-temp.txt', 'r')
-        #     tempfile2 = open('output/allchr_sensitive-cancer-genes-sorted-temp.txt', 'a+')
-        #     for line in sorted(tempfile, key=lambda line: float(line.split()[0]), reverse=True):
-        #         tempfile2.write(line)
-        #     tempfile.close()
-        #     os.remove('output/allchr_sensitive-cancer-genes-temp.txt')
-        #     tempfile2.close()
-        #     tempfile3 = open('output/allchr_sensitive-cancer-genes-sorted-temp.txt', 'r')
-        #     tempfile4 = open('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt', 'a+')
-        #     outfile = open('output/allchr_sensitive-cancer-genes-sorted.txt', 'a+')
-        #     for line in tempfile3:
-        #         if float(line.split()[2]) > 0.00001:
-        #             tempfile4.write(line)
-        #         else:
-        #             outfile.write(line)
-        #     tempfile4.close()
-        #     tempfile5 = open('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt', 'r')
-        #     outfile.write(tempfile5.read())
-        #     outfile.close()
-        #     os.remove('output/allchr_sensitive-cancer-genes-sorted-temp.txt')
-        #     os.remove('output/allchr_sensitive-cancer-genes-sorted-temp-bigpval.txt')
-        # else:
-        #     tempfile = open('output/allchr_sensitive-cancer-genes-temp.txt', 'r')
-        #     outfile = open('output/allchr_sensitive-cancer-genes-sorted.txt', 'a+')
-        #     for line in sorted(tempfile, key=lambda line: float(line.split()[0])):
-        #         outfile.write(line)
-        #     tempfile.close()
-        #     os.remove('output/allchr_sensitive-cancer-genes-temp.txt')
-        #     outfile.close()
         tempfile = open('output/allchr_sensitive-cancer-genes-temp.txt', 'r')
         outfile = open('output/allchr_sensitive-cancer-genes-sorted.txt', 'a+')
         for line in sorted(tempfile, key=lambda line: float(line.split()[0])):

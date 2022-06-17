@@ -116,7 +116,8 @@ def slight_divergent(chrnum):
             temp = []
             n = []
         else:
-            outputf.write(prev_line.split()[0]+'\t'+str(prev_line.split()[1])+'\t1\t'+prev_line.split()[4]+'\n')
+            if prev_line: # else the tfile is empty
+                outputf.write(prev_line.split()[0]+'\t'+str(prev_line.split()[1])+'\t1\t'+prev_line.split()[4]+'\n')
         outputf.close()
 
 
